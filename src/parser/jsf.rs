@@ -388,15 +388,15 @@ pub enum MessageType {
     },
 }
 
-pub struct JSFFile<'a, T: io::Read + io::Seek> {
-    pub reader: &'a mut T,
+pub struct JSFFile<T: io::Read + io::Seek> {
+    pub reader: T,
 }
 
-impl<T: io::Read + io::Seek> Iterator for JSFFile<'_, T> {
+impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
     type Item = BinResult<Message>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let res = Message::read(self.reader);
+        let res = Message::read(&mut self.reader);
         match res {
             Ok(msg) => Some(Ok(msg)),
             Err(e) => {

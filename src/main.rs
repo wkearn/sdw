@@ -7,10 +7,8 @@ fn main() -> Result<(), binrw::Error> {
     let path = &args[1];
 
     let f = std::fs::File::open(path)?;
-    let mut reader = BufReader::new(f);
-    let jsf = jsf::JSFFile {
-        reader: &mut reader,
-    };
+    let reader = BufReader::new(f);
+    let jsf = jsf::JSFFile { reader };
 
     let mut msg_counts = std::collections::HashMap::new();
 
