@@ -388,6 +388,17 @@ pub enum MessageType {
     },
 }
 
+fn message_type_string(msg: &MessageType) -> String {
+    match msg {
+	MessageType::M80 {msg: _} => "SonarDataMessage".to_string(),
+	MessageType::M2020 {msg: _} => "PitchRollData".to_string(),
+	MessageType::M2002 {msg: _} => "NMEAString".to_string(),
+	MessageType::M181 {msg: _} => "NavigationOffsets".to_string(),
+	MessageType::M182 {msg: _} => "SystemInformation".to_string(),
+	MessageType::M0 {msg: _} => "UnknownMessage".to_string(),
+    }
+}
+
 pub struct JSFFile<T: io::Read + io::Seek> {
     pub reader: T,
 }
@@ -410,14 +421,15 @@ impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
     }
 }
 
-pub fn count_jsf_messages<T: io::Seek + io::Read>(file: JSFFile<T>) {
+pub fn count_jsf_messages<T: io::Seek + io::Read>(file: JSFFile<T>) -> std::collections::HashMap<String,i64> {
     let mut msg_counts = std::collections::HashMap::new();
 
     file.fold(&mut msg_counts, |counts, msg| {
-        let num = counts.entry(message_type(&msg.unwrap())).or_insert(0);
+	let mt = message_type_string(message_data(&msg.unwrap()));
+        let num = counts.entry(mt).or_insert(0);
         *num += 1;
         counts
     });
 
-    println!("{:?}", msg_counts);
+    msg_counts
 }

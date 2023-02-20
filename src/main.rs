@@ -13,7 +13,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	    let f = std::fs::File::open(path)?;
 	    let reader = BufReader::new(f);
 	    let jsf = jsf::JSFFile { reader };
-	    jsf::count_jsf_messages(jsf);
+	    let counts = jsf::count_jsf_messages(jsf);
+	    for (key,value) in &counts {		
+		println!("{} {}",value,key);
+	    }
 	}
     }
 
