@@ -223,7 +223,7 @@ impl PitchRollData {
     }
 
     fn is_acceleration_x_valid(&self) -> bool {
-        ((self.validity_flag & 0x0001) >> 0) == 1
+        self.validity_flag & 0x0001 == 1
     }
 
     fn is_acceleration_y_valid(&self) -> bool {
@@ -279,81 +279,81 @@ impl PitchRollData {
             && self.is_acceleration_y_valid()
             && self.is_acceleration_z_valid()
         {
-            return Some((
+            Some((
                 f64::from(self.acceleration_x) * 20.0 * 1.5 / 32768.0,
                 f64::from(self.acceleration_y) * 20.0 * 1.5 / 32768.0,
                 f64::from(self.acceleration_z) * 20.0 * 1.5 / 32768.0,
-            ));
+            ))
         } else {
-            return None;
+            None
         }
     }
 
     pub fn gyro_rate(&self) -> Option<(f64, f64, f64)> {
         if self.is_gyro_rate_x_valid() && self.is_gyro_rate_y_valid() && self.is_gyro_rate_z_valid()
         {
-            return Some((
+            Some((
                 f64::from(self.gyro_rate_x) * 500.0 * 1.5 / 32768.0,
                 f64::from(self.gyro_rate_y) * 500.0 * 1.5 / 32768.0,
                 f64::from(self.gyro_rate_z) * 500.0 * 1.5 / 32768.0,
-            ));
+            ))
         } else {
-            return None;
+            None
         }
     }
 
     pub fn pitch(&self) -> Option<f64> {
         if self.is_pitch_valid() {
-            return Some(f64::from(self.pitch) * 180.0 / 32768.0);
+            Some(f64::from(self.pitch) * 180.0 / 32768.0)
         } else {
-            return None;
+            None
         }
     }
     pub fn roll(&self) -> Option<f64> {
         if self.is_roll_valid() {
-            return Some(f64::from(self.roll) * 180.0 / 32768.0);
+            Some(f64::from(self.roll) * 180.0 / 32768.0)
         } else {
-            return None;
+            None
         }
     }
 
     pub fn temperature(&self) -> Option<f64> {
         if self.is_temperature_valid() {
-            return Some(f64::from(self.temperature) * 0.1);
+            Some(f64::from(self.temperature) * 0.1)
         } else {
-            return None;
+            None
         }
     }
 
     pub fn device_info(&self) -> Option<u16> {
         if self.is_device_info_valid() {
-            return Some(self.device_info);
+            Some(self.device_info)
         } else {
-            return None;
+            None
         }
     }
 
     pub fn heading(&self) -> Option<f64> {
         if self.is_heading_valid() {
-            return Some(f64::from(self.heading) * 0.01);
+            Some(f64::from(self.heading) * 0.01)
         } else {
-            return None;
+            None
         }
     }
 
     pub fn heave(&self) -> Option<f64> {
         if self.is_heave_valid() {
-            return Some(f64::from(self.heave) / 1000.0);
+            Some(f64::from(self.heave) / 1000.0)
         } else {
-            return None;
+            None
         }
     }
 
     pub fn yaw(&self) -> Option<f64> {
         if self.is_yaw_valid() {
-            return Some(f64::from(self.yaw) * 0.01);
+            Some(f64::from(self.yaw) * 0.01)
         } else {
-            return None;
+            None
         }
     }
 }
@@ -399,13 +399,13 @@ impl<T: io::Read + io::Seek> Iterator for JSFFile<'_, T> {
         let res = Message::read(self.reader);
         match res {
             Ok(msg) => {
-                return Some(Ok(msg));
+                Some(Ok(msg))
             }
             Err(e) => {
                 if e.is_eof() {
-                    return None;
+                    None
                 } else {
-                    return Some(Err(e));
+                    Some(Err(e))
                 }
             }
         }
