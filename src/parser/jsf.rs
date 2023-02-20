@@ -410,7 +410,7 @@ impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
     }
 }
 
-pub fn count_jsf_messages<T: io::Seek + io::Read>(file:JSFFile<T>) {
+pub fn count_jsf_messages<T: io::Seek + io::Read>(file: JSFFile<T>) {
     let mut msg_counts = std::collections::HashMap::new();
 
     file.fold(&mut msg_counts, |counts, msg| {
@@ -419,4 +419,5 @@ pub fn count_jsf_messages<T: io::Seek + io::Read>(file:JSFFile<T>) {
         counts
     });
 
-    println!("{:?}", msg_counts);}
+    println!("{:?}", msg_counts);
+}
