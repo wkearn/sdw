@@ -4,7 +4,7 @@ use clap::Parser;
 use sdw::cli::Args;
 use sdw::parser::jsf;
 
-fn main() -> Result<(), binrw::Error> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     let args = Args::parse();
 
