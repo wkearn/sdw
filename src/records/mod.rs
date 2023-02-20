@@ -1,8 +1,9 @@
 use crate::channel::Channel;
 use crate::parser::jsf;
 use time::OffsetDateTime;
+use serde::{Deserialize,Serialize};
 
-#[derive(Debug)]
+#[derive(Debug,Deserialize,Serialize)]
 pub enum SonarDataRecord<T> {
     Ping {
 	source: String,
