@@ -1,7 +1,6 @@
 use binrw::io::BufReader;
 
 use sdw::parser::jsf;
-use sdw::records::SonarDataRecord;
 
 fn main() -> Result<(), binrw::Error> {
     let args: Vec<String> = std::env::args().collect();
