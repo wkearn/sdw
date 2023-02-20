@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	    let jsf = jsf::JSFFile { reader };
 	    let counts = jsf::count_jsf_messages(jsf);
 	    for (key,value) in &counts {		
-		println!("{} {}",value,key);
+		println!("{}\t{}",value,key);
 	    }
 	}
     }
