@@ -398,9 +398,7 @@ impl<T: io::Read + io::Seek> Iterator for JSFFile<'_, T> {
     fn next(&mut self) -> Option<Self::Item> {
         let res = Message::read(self.reader);
         match res {
-            Ok(msg) => {
-                Some(Ok(msg))
-            }
+            Ok(msg) => Some(Ok(msg)),
             Err(e) => {
                 if e.is_eof() {
                     None
