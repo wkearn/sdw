@@ -1,3 +1,4 @@
+//! Parsing Edgetech JSF files
 use crate::records::{Channel, SonarDataRecord};
 use binrw::io;
 use binrw::{binread, BinRead, BinResult};
