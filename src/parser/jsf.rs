@@ -1,5 +1,4 @@
-use crate::channel::Channel;
-use crate::records::SonarDataRecord;
+use crate::records::{Channel,SonarDataRecord};
 use binrw::io;
 use binrw::{binread, BinRead, BinResult};
 

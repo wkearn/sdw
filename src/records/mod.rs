@@ -1,6 +1,12 @@
-use crate::channel::Channel;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum Channel {
+    Port,
+    Starboard,
+    Other,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Ping<T> {
