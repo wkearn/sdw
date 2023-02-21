@@ -18,44 +18,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let jsf = jsf::JSFFile { reader };
             let counts = jsf::count_jsf_messages(jsf);
 
-	    match output {
-		Some(path) => {
-		    let mut writer = std::fs::File::create(path)?;
-		    for (key, value) in &counts {
-			writeln!(writer,"{}\t{}", value, key)?;
-		    };
-		},
-		None => {
-		    let mut writer = stdout().lock();
-		    for (key, value) in &counts {
-			writeln!(writer,"{}\t{}", value, key)?;
-		    };
-		}
-	    };
-	    
-            
+            match output {
+                Some(path) => {
+                    let mut writer = std::fs::File::create(path)?;
+                    for (key, value) in &counts {
+                        writeln!(writer, "{}\t{}", value, key)?;
+                    }
+                }
+                None => {
+                    let mut writer = stdout().lock();
+                    for (key, value) in &counts {
+                        writeln!(writer, "{}\t{}", value, key)?;
+                    }
+                }
+            };
         }
         Action::List { path, output } => {
             let f = std::fs::File::open(path)?;
             let reader = BufReader::new(f);
             let jsf = jsf::JSFFile { reader };
-	    match output {
-		Some(path) => {
-		    let mut writer = std::fs::File::create(path)?;
-		    for msg in jsf {
-			let mt = jsf::message_type_string(jsf::message_data(&msg.unwrap()));
-			writeln!(writer, "{}", mt).unwrap();
-		    };	
-		},
-		None => {
-		    let mut writer = stdout().lock();
-		    for msg in jsf {
-			let mt = jsf::message_type_string(jsf::message_data(&msg.unwrap()));
-			writeln!(writer, "{}", mt).unwrap();
-		    };
-		}
-	    };
-            
+            match output {
+                Some(path) => {
+                    let mut writer = std::fs::File::create(path)?;
+                    for msg in jsf {
+                        let mt = jsf::message_type_string(jsf::message_data(&msg.unwrap()));
+                        writeln!(writer, "{}", mt).unwrap();
+                    }
+                }
+                None => {
+                    let mut writer = stdout().lock();
+                    for msg in jsf {
+                        let mt = jsf::message_type_string(jsf::message_data(&msg.unwrap()));
+                        writeln!(writer, "{}", mt).unwrap();
+                    }
+                }
+            };
         }
         Action::Avro { path, output } => {
             let raw_schema = r#"{"type": "record","namespace": "sdw","name": "ping","fields": [{"name": "source", "type": "string"},{"name": "timestamp", "type": "long"},{"name": "frequency", "type" : "double"},{"name": "sampling_interval", "type" : "double"},{"name": "channel", "type": "enum", "symbols":["Port","Starboard","Other"],"default":"Other"},{"name": "data", "type":"array","items": "int","default":[]}]}"#;
