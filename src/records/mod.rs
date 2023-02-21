@@ -1,5 +1,4 @@
 use crate::channel::Channel;
-use crate::parser::jsf;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
@@ -34,28 +33,4 @@ pub enum SonarDataRecord<T> {
         heading: Option<f64>,
     },
     Unknown,
-}
-
-impl From<jsf::Message> for SonarDataRecord<u16> {
-    fn from(msg: jsf::Message) -> Self {
-        let md = jsf::message_data(&msg);
-        match md {
-            jsf::MessageType::M80 { msg: mt } => SonarDataRecord::Ping {
-                source: "unknown".to_string(),
-                timestamp: mt.timestamp(),
-                frequency: mt.mixer_frequency(),
-                sampling_interval: mt.sampling_interval(),
-                channel: jsf::channel(&msg),
-                data: mt.trace().to_vec(),
-            },
-            jsf::MessageType::M2020 { msg: mt } => SonarDataRecord::Orientation {
-                source: "unknown".to_string(),
-                timestamp: mt.timestamp(),
-                pitch: mt.pitch(),
-                roll: mt.roll(),
-                heading: mt.heading(),
-            },
-            _ => SonarDataRecord::Unknown,
-        }
-    }
 }

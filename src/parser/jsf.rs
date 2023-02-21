@@ -1,4 +1,5 @@
 use crate::channel::Channel;
+use crate::records::SonarDataRecord;
 use binrw::io;
 use binrw::{binread, BinRead, BinResult};
 
@@ -434,4 +435,29 @@ pub fn count_jsf_messages<T: io::Seek + io::Read>(
     });
 
     msg_counts
+}
+
+// SonarDataRecord interface
+impl From<Message> for SonarDataRecord<u16> {
+    fn from(msg: Message) -> Self {
+        let md = message_data(&msg);
+        match md {
+            MessageType::M80 { msg: mt } => SonarDataRecord::Ping {
+                source: "unknown".to_string(),
+                timestamp: mt.timestamp(),
+                frequency: mt.mixer_frequency(),
+                sampling_interval: mt.sampling_interval(),
+                channel: channel(&msg),
+                data: mt.trace().to_vec(),
+            },
+            MessageType::M2020 { msg: mt } => SonarDataRecord::Orientation {
+                source: "unknown".to_string(),
+                timestamp: mt.timestamp(),
+                pitch: mt.pitch(),
+                roll: mt.roll(),
+                heading: mt.heading(),
+            },
+            _ => SonarDataRecord::Unknown,
+        }
+    }
 }
