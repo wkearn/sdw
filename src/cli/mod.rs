@@ -23,3 +23,7 @@ pub enum Action {
         output: std::path::PathBuf,
     },
 }
+
+pub mod avro;
+pub mod count;
+pub mod list;
