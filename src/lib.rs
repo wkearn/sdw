@@ -1,3 +1,4 @@
+//! A toolkit for working with sonar data
 pub mod channel;
 pub mod cli;
 pub mod parser;
