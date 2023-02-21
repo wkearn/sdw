@@ -25,6 +25,7 @@ enum Action {
     },
 }
 
+/// Run the command line program.
 pub fn run() -> std::io::Result<()> {
     let args = Args::parse();
 
