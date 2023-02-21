@@ -24,6 +24,21 @@ pub enum Action {
     },
 }
 
+pub fn run(args: Args) -> std::io::Result<()> {
+    match args.cmd {
+        Action::Count { path, output } => {
+            count::count(path, output)?;
+        }
+        Action::List { path, output } => {
+            list::list(path, output)?;
+        }
+        Action::Avro { path, output } => {
+            avro::avro(path, output)?;
+        }
+    };
+    Ok(())
+}
+
 pub mod avro;
 pub mod count;
 pub mod list;
