@@ -1,3 +1,4 @@
+//! Command line sonar data management tools
 use clap::Parser;
 
 #[derive(Parser, Debug)]

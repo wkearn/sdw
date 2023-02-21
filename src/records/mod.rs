@@ -1,3 +1,4 @@
+//! The SDW data model
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
