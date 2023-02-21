@@ -6,7 +6,7 @@ use sdw::cli::{Action, Args};
 use sdw::parser::jsf;
 use sdw::records::SonarDataRecord;
 
-use apache_avro::{Writer,Schema};
+use apache_avro::{Schema, Writer};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
@@ -31,27 +31,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 writeln!(lock, "{}", mt).unwrap();
             }
         }
-        Action::Avro { path,output } => {
+        Action::Avro { path, output } => {
+            let raw_schema = r#"{"type": "record","namespace": "sdw","name": "ping","fields": [{"name": "source", "type": "string"},{"name": "timestamp", "type": "long"},{"name": "frequency", "type" : "double"},{"name": "sampling_interval", "type" : "double"},{"name": "channel", "type": "enum", "symbols":["Port","Starboard","Other"],"default":"Other"},{"name": "data", "type":"array","items": "int","default":[]}]}"#;
+            let ping_schema = Schema::parse_str(raw_schema)?;
 
-	    let raw_schema = r#"{"type": "record","namespace": "sdw","name": "ping","fields": [{"name": "source", "type": "string"},{"name": "timestamp", "type": "long"},{"name": "frequency", "type" : "double"},{"name": "sampling_interval", "type" : "double"},{"name": "channel", "type": "enum", "symbols":["Port","Starboard","Other"],"default":"Other"},{"name": "data", "type":"array","items": "int","default":[]}]}"#;
-	    let ping_schema = Schema::parse_str(raw_schema)?;
-	    
-	    let f = std::fs::File::open(path)?;
+            let f = std::fs::File::open(path)?;
             let reader = BufReader::new(f);
             let jsf = jsf::JSFFile { reader };
-	    let sds = jsf.filter_map(|msg| {
-		if let SonarDataRecord::Ping(ping) = SonarDataRecord::from(msg.unwrap()) {
-		    Some(ping)
-		} else {
-		    None
-		}
-	    });
+            let sds = jsf.filter_map(|msg| {
+                if let SonarDataRecord::Ping(ping) = SonarDataRecord::from(msg.unwrap()) {
+                    Some(ping)
+                } else {
+                    None
+                }
+            });
 
-	    let g = std::fs::File::create(output)?;
-	    let mut writer = Writer::new(&ping_schema, g);
+            let g = std::fs::File::create(output)?;
+            let mut writer = Writer::new(&ping_schema, g);
 
-	    writer.extend_ser(sds).unwrap();
-	}
+            writer.extend_ser(sds).unwrap();
+        }
     };
 
     Ok(())

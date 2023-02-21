@@ -20,29 +20,43 @@ pub struct Ping<T> {
 }
 
 impl<T> Ping<T> {
-    pub fn new(source:String,timestamp:OffsetDateTime,frequency:f64,sampling_interval:f64,channel:Channel,data:Vec<T>) -> Ping<T> {
-	Ping {source,timestamp,frequency,sampling_interval,channel,data}
+    pub fn new(
+        source: String,
+        timestamp: OffsetDateTime,
+        frequency: f64,
+        sampling_interval: f64,
+        channel: Channel,
+        data: Vec<T>,
+    ) -> Ping<T> {
+        Ping {
+            source,
+            timestamp,
+            frequency,
+            sampling_interval,
+            channel,
+            data,
+        }
     }
 
     pub fn timestamp(&self) -> OffsetDateTime {
-	self.timestamp
+        self.timestamp
     }
 }
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Position {
     source: String,
-    #[serde(with="time::serde::timestamp")]
+    #[serde(with = "time::serde::timestamp")]
     timestamp: OffsetDateTime,
     longitude: Option<f64>,
     latitude: Option<f64>,
     altitude: Option<f64>,
 }
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Orientation {
     source: String,
-    #[serde(with="time::serde::timestamp")]
+    #[serde(with = "time::serde::timestamp")]
     timestamp: OffsetDateTime,
     pitch: Option<f64>,
     roll: Option<f64>,
@@ -50,17 +64,29 @@ pub struct Orientation {
 }
 
 impl Orientation {
-    pub fn new(source:String,timestamp:OffsetDateTime,pitch:Option<f64>,roll:Option<f64>,heading:Option<f64>) -> Orientation {
-	Orientation {source,timestamp,pitch,roll,heading}
+    pub fn new(
+        source: String,
+        timestamp: OffsetDateTime,
+        pitch: Option<f64>,
+        roll: Option<f64>,
+        heading: Option<f64>,
+    ) -> Orientation {
+        Orientation {
+            source,
+            timestamp,
+            pitch,
+            roll,
+            heading,
+        }
     }
 }
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Course {
     source: String,
     timestamp: OffsetDateTime,
     speed: Option<f64>,
-    heading: Option<f64>
+    heading: Option<f64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -69,5 +95,5 @@ pub enum SonarDataRecord<T> {
     Position(Position),
     Orientation(Orientation),
     Course(Course),
-    Unknown
+    Unknown,
 }

@@ -1,4 +1,4 @@
-use crate::records::{Channel,SonarDataRecord};
+use crate::records::{Channel, SonarDataRecord};
 use binrw::io;
 use binrw::{binread, BinRead, BinResult};
 
@@ -441,7 +441,7 @@ impl From<Message> for SonarDataRecord<u16> {
     fn from(msg: Message) -> Self {
         let md = message_data(&msg);
         match md {
-            MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::records::Ping::new(		
+            MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::records::Ping::new(
                 "unknown".to_string(),
                 mt.timestamp(),
                 mt.mixer_frequency(),
@@ -449,13 +449,15 @@ impl From<Message> for SonarDataRecord<u16> {
                 channel(&msg),
                 mt.trace().to_vec(),
             )),
-            MessageType::M2020 { msg: mt } => SonarDataRecord::Orientation (crate::records::Orientation::new (
-                "unknown".to_string(),
-                mt.timestamp(),
-                mt.pitch(),
-                mt.roll(),
-                mt.heading(),
-            )),
+            MessageType::M2020 { msg: mt } => {
+                SonarDataRecord::Orientation(crate::records::Orientation::new(
+                    "unknown".to_string(),
+                    mt.timestamp(),
+                    mt.pitch(),
+                    mt.roll(),
+                    mt.heading(),
+                ))
+            }
             _ => SonarDataRecord::Unknown,
         }
     }
