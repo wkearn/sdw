@@ -10,4 +10,6 @@ pub struct Args {
 pub enum Action {
     Count { path: std::path::PathBuf },
     List { path: std::path::PathBuf },
+    Avro { path: std::path::PathBuf,
+	   output: std::path::PathBuf}
 }

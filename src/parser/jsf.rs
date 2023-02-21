@@ -442,21 +442,21 @@ impl From<Message> for SonarDataRecord<u16> {
     fn from(msg: Message) -> Self {
         let md = message_data(&msg);
         match md {
-            MessageType::M80 { msg: mt } => SonarDataRecord::Ping {
-                source: "unknown".to_string(),
-                timestamp: mt.timestamp(),
-                frequency: mt.mixer_frequency(),
-                sampling_interval: mt.sampling_interval(),
-                channel: channel(&msg),
-                data: mt.trace().to_vec(),
-            },
-            MessageType::M2020 { msg: mt } => SonarDataRecord::Orientation {
-                source: "unknown".to_string(),
-                timestamp: mt.timestamp(),
-                pitch: mt.pitch(),
-                roll: mt.roll(),
-                heading: mt.heading(),
-            },
+            MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::records::Ping::new(		
+                "unknown".to_string(),
+                mt.timestamp(),
+                mt.mixer_frequency(),
+                mt.sampling_interval(),
+                channel(&msg),
+                mt.trace().to_vec(),
+            )),
+            MessageType::M2020 { msg: mt } => SonarDataRecord::Orientation (crate::records::Orientation::new (
+                "unknown".to_string(),
+                mt.timestamp(),
+                mt.pitch(),
+                mt.roll(),
+                mt.heading(),
+            )),
             _ => SonarDataRecord::Unknown,
         }
     }
