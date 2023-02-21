@@ -1,3 +1,4 @@
+//! Converting sonar data files to Avro files
 use crate::parser::jsf;
 use crate::records::SonarDataRecord;
 
