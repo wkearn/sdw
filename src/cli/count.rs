@@ -1,3 +1,4 @@
+//! Count SonarDataRecords in a given file
 use crate::parser::jsf;
 use crate::records::SonarDataRecord;
 use binrw::io::BufReader;
