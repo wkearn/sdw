@@ -24,7 +24,9 @@ pub enum Action {
     },
 }
 
-pub fn run(args: Args) -> std::io::Result<()> {
+pub fn run() -> std::io::Result<()> {
+    let args = Args::parse();
+
     match args.cmd {
         Action::Count { path, output } => {
             count::count(path, output)?;
