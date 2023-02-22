@@ -422,21 +422,6 @@ impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
     }
 }
 
-pub fn count_jsf_messages<T: io::Seek + io::Read>(
-    file: JSFFile<T>,
-) -> std::collections::HashMap<String, i64> {
-    let mut msg_counts = std::collections::HashMap::new();
-
-    file.fold(&mut msg_counts, |counts, msg| {
-        let mt = message_type_string(message_data(&msg.unwrap()));
-        let num = counts.entry(mt).or_insert(0);
-        *num += 1;
-        counts
-    });
-
-    msg_counts
-}
-
 // SonarDataRecord interface
 impl From<Message> for SonarDataRecord<u16> {
     fn from(msg: Message) -> Self {
