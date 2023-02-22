@@ -45,6 +45,7 @@ impl Args {
         Ok(())
     }
 
+    /// Run the CLI
     pub fn run() -> std::io::Result<()> {
         Args::parse().dispatch()
     }
