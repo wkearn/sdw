@@ -30,7 +30,7 @@ pub struct Args {
 }
 
 impl Args {
-    pub fn run(&self) -> std::io::Result<()> {
+    pub fn dispatch(&self) -> std::io::Result<()> {
         match &self.cmd {
             Action::Count { path, output } => {
                 count::count(path, output)?;
@@ -43,5 +43,9 @@ impl Args {
             }
         };
         Ok(())
+    }
+
+    pub fn run() -> std::io::Result<()> {
+        Args::parse().dispatch()
     }
 }
