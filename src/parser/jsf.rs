@@ -169,7 +169,7 @@ impl SonarData {
     }
 
     pub fn mixer_frequency(&self) -> f64 {
-        self.mixer_frequency.into()
+        f64::from(self.mixer_frequency)
     }
 
     pub fn sampling_interval(&self) -> f64 {
