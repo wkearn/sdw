@@ -1,11 +1,9 @@
 //! Command line sonar data management tools
 use clap::Parser;
 
-#[derive(Parser, Debug)]
-struct Args {
-    #[command(subcommand)]
-    pub cmd: Action,
-}
+pub mod avro;
+pub mod count;
+pub mod list;
 
 #[derive(clap::Subcommand, Debug)]
 enum Action {
@@ -25,24 +23,25 @@ enum Action {
     },
 }
 
-/// Run the command line program.
-pub fn run() -> std::io::Result<()> {
-    let args = Args::parse();
-
-    match args.cmd {
-        Action::Count { path, output } => {
-            count::count(path, output)?;
-        }
-        Action::List { path, output } => {
-            list::list(path, output)?;
-        }
-        Action::Avro { path, output } => {
-            avro::avro(path, output)?;
-        }
-    };
-    Ok(())
+#[derive(Parser, Debug)]
+pub struct Args {
+    #[command(subcommand)]
+    cmd: Action,
 }
 
-pub mod avro;
-pub mod count;
-pub mod list;
+impl Args {
+    pub fn run(&self) -> std::io::Result<()> {
+        match &self.cmd {
+            Action::Count { path, output } => {
+                count::count(path, output)?;
+            }
+            Action::List { path, output } => {
+                list::list(path, output)?;
+            }
+            Action::Avro { path, output } => {
+                avro::avro(path, output)?;
+            }
+        };
+        Ok(())
+    }
+}

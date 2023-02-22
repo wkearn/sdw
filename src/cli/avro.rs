@@ -13,7 +13,7 @@ use binrw::io::BufReader;
 /// ```console
 /// $ sdw avro <input> <output>
 /// ```
-pub fn avro(path: std::path::PathBuf, output: std::path::PathBuf) -> std::io::Result<()> {
+pub fn avro(path: &std::path::PathBuf, output: &std::path::PathBuf) -> std::io::Result<()> {
     let raw_schema = r#"{"type": "record","namespace": "sdw","name": "ping","fields": [{"name": "source", "type": "string"},{"name": "timestamp", "type": "long"},{"name": "frequency", "type" : "double"},{"name": "sampling_interval", "type" : "double"},{"name": "channel", "type": "enum", "symbols":["Port","Starboard","Other"],"default":"Other"},{"name": "data", "type":"array","items": "int","default":[]}]}"#;
     let ping_schema = Schema::parse_str(raw_schema).unwrap();
 

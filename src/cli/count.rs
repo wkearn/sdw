@@ -27,7 +27,10 @@ where
     msg_counts
 }
 
-pub fn count(path: std::path::PathBuf, output: Option<std::path::PathBuf>) -> std::io::Result<()> {
+pub fn count(
+    path: &std::path::PathBuf,
+    output: &Option<std::path::PathBuf>,
+) -> std::io::Result<()> {
     let f = std::fs::File::open(path)?;
     let reader = BufReader::new(f);
     let jsf = jsf::JSFFile { reader };
