@@ -20,6 +20,8 @@ enum Action {
     Avro {
         path: std::path::PathBuf,
         output: std::path::PathBuf,
+        #[arg(short = 'z', long)]
+        compress: bool,
     },
 }
 
@@ -38,8 +40,12 @@ impl Args {
             Action::List { path, output } => {
                 list::list(path, output)?;
             }
-            Action::Avro { path, output } => {
-                avro::avro(path, output)?;
+            Action::Avro {
+                path,
+                output,
+                compress,
+            } => {
+                avro::avro(path, output, compress)?;
             }
         };
         Ok(())

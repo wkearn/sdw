@@ -2,7 +2,7 @@
 use crate::parser::jsf;
 use crate::records::SonarDataRecord;
 
-use apache_avro::{Schema, Writer};
+use apache_avro::{Codec, Schema, Writer};
 
 use binrw::io::BufReader;
 
@@ -13,7 +13,11 @@ use binrw::io::BufReader;
 /// ```console
 /// $ sdw avro <input> <output>
 /// ```
-pub fn avro(path: &std::path::PathBuf, output: &std::path::PathBuf) -> std::io::Result<()> {
+pub fn avro(
+    path: &std::path::PathBuf,
+    output: &std::path::PathBuf,
+    compress: &bool,
+) -> std::io::Result<()> {
     let raw_schema = r#"{"type": "record","namespace": "sdw","name": "ping","fields": [{"name": "source", "type": "string"},{"name": "timestamp", "type": "long"},{"name": "frequency", "type" : "double"},{"name": "sampling_interval", "type" : "double"},{"name": "channel", "type": "enum", "symbols":["Port","Starboard","Other"],"default":"Other"},{"name": "data", "type":"array","items": "int","default":[]}]}"#;
     let ping_schema = Schema::parse_str(raw_schema).unwrap();
 
@@ -28,8 +32,14 @@ pub fn avro(path: &std::path::PathBuf, output: &std::path::PathBuf) -> std::io::
         }
     });
 
+    let codec = if *compress {
+        Codec::Deflate
+    } else {
+        Codec::Null
+    };
+
     let g = std::fs::File::create(output)?;
-    let mut writer = Writer::new(&ping_schema, g);
+    let mut writer = Writer::with_codec(&ping_schema, g, codec);
 
     writer.extend_ser(sds).unwrap();
     Ok(())
