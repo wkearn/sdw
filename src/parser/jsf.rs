@@ -166,19 +166,23 @@ pub struct SonarData {
 }
 
 impl SonarData {
+    /// Return the timestamp
     pub fn timestamp(&self) -> OffsetDateTime {
         OffsetDateTime::from_unix_timestamp(i64::from(self.time)).unwrap()
             + Duration::milliseconds(i64::from(self.milliseconds_today % 1000))
     }
 
+    /// Return the mixer frequency in hertz
     pub fn mixer_frequency(&self) -> f64 {
         f64::from(self.mixer_frequency)
     }
 
+    /// Return the sampling interval in seconds
     pub fn sampling_interval(&self) -> f64 {
         1e-9 * f64::from(self.sampling_interval)
     }
 
+    /// Return the sonar data trace
     pub fn trace(&self) -> &Vec<u16> {
         &self.trace
     }
@@ -223,6 +227,7 @@ pub struct PitchRollData {
 }
 
 impl PitchRollData {
+    /// Return the timestamp
     pub fn timestamp(&self) -> OffsetDateTime {
         OffsetDateTime::from_unix_timestamp(i64::from(self.time)).unwrap()
             + Duration::milliseconds(i64::from(self.milliseconds % 1000))
@@ -280,6 +285,9 @@ impl PitchRollData {
         ((self.validity_flag & 0x1000) >> 12) == 1
     }
 
+    /// Compute the acceleration
+    ///
+    /// The result is the acceleration in the (x,y,z) direction
     pub fn acceleration(&self) -> Option<(f64, f64, f64)> {
         if self.is_acceleration_x_valid()
             && self.is_acceleration_y_valid()
@@ -295,6 +303,9 @@ impl PitchRollData {
         }
     }
 
+    /// Compute the gyro rate in degrees/sec
+    ///
+    /// The return is the gyro rate in the (x,y,z) direction    
     pub fn gyro_rate(&self) -> Option<(f64, f64, f64)> {
         if self.is_gyro_rate_x_valid() && self.is_gyro_rate_y_valid() && self.is_gyro_rate_z_valid()
         {
@@ -308,6 +319,9 @@ impl PitchRollData {
         }
     }
 
+    /// Compute the pitch in degrees
+    ///
+    /// Bow up is positive
     pub fn pitch(&self) -> Option<f64> {
         if self.is_pitch_valid() {
             Some(f64::from(self.pitch) * 180.0 / 32768.0)
@@ -315,6 +329,10 @@ impl PitchRollData {
             None
         }
     }
+
+    /// Compute the roll
+    ///
+    /// Port up is positive
     pub fn roll(&self) -> Option<f64> {
         if self.is_roll_valid() {
             Some(f64::from(self.roll) * 180.0 / 32768.0)
@@ -323,6 +341,7 @@ impl PitchRollData {
         }
     }
 
+    /// Compute the temperature
     pub fn temperature(&self) -> Option<f64> {
         if self.is_temperature_valid() {
             Some(f64::from(self.temperature) * 0.1)
@@ -331,6 +350,7 @@ impl PitchRollData {
         }
     }
 
+    /// Return the device info
     pub fn device_info(&self) -> Option<u16> {
         if self.is_device_info_valid() {
             Some(self.device_info)
@@ -339,6 +359,7 @@ impl PitchRollData {
         }
     }
 
+    /// Compute the heading in degrees
     pub fn heading(&self) -> Option<f64> {
         if self.is_heading_valid() {
             Some(f64::from(self.heading) * 0.01)
@@ -347,6 +368,7 @@ impl PitchRollData {
         }
     }
 
+    /// Compute the heave in millimeters
     pub fn heave(&self) -> Option<f64> {
         if self.is_heave_valid() {
             Some(f64::from(self.heave) / 1000.0)
@@ -355,6 +377,7 @@ impl PitchRollData {
         }
     }
 
+    /// Compute the yaw in degrees
     pub fn yaw(&self) -> Option<f64> {
         if self.is_yaw_valid() {
             Some(f64::from(self.yaw) * 0.01)
