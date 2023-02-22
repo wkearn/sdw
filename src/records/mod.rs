@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub enum Channel {
     Port,
     Starboard,
@@ -42,6 +42,10 @@ impl<T> Ping<T> {
     pub fn timestamp(&self) -> OffsetDateTime {
         self.timestamp
     }
+
+    pub fn channel(&self) -> Channel {
+	self.channel
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,6 +56,12 @@ pub struct Position {
     longitude: Option<f64>,
     latitude: Option<f64>,
     altitude: Option<f64>,
+}
+
+impl Position {
+    pub fn timestamp(&self) -> OffsetDateTime {
+        self.timestamp
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -80,6 +90,10 @@ impl Orientation {
             heading,
         }
     }
+
+    pub fn timestamp(&self) -> OffsetDateTime {
+        self.timestamp
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,6 +102,12 @@ pub struct Course {
     timestamp: OffsetDateTime,
     speed: Option<f64>,
     heading: Option<f64>,
+}
+
+impl Course {
+    pub fn timestamp(&self) -> OffsetDateTime {
+        self.timestamp
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
