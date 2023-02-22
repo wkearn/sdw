@@ -27,7 +27,7 @@ enum Action {
 
 /// Command line arguments
 ///
-/// This wraps a subcommand, which is where everything happens
+/// This wraps an Action, which is where everything happens
 #[derive(Parser, Debug)]
 pub struct Args {
     #[command(subcommand)]
