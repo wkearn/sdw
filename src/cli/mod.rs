@@ -30,7 +30,7 @@ pub struct Args {
 }
 
 impl Args {
-    pub fn dispatch(&self) -> std::io::Result<()> {
+    fn dispatch(&self) -> std::io::Result<()> {
         match &self.cmd {
             Action::Count { path, output } => {
                 count::count(path, output)?;
