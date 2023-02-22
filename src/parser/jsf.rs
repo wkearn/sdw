@@ -384,17 +384,6 @@ pub enum MessageType {
     },
 }
 
-pub fn message_type_string(msg: &MessageType) -> String {
-    match msg {
-        MessageType::M80 { msg: _ } => "SonarDataMessage".to_string(),
-        MessageType::M2020 { msg: _ } => "PitchRollData".to_string(),
-        MessageType::M2002 { msg: _ } => "NMEAString".to_string(),
-        MessageType::M181 { msg: _ } => "NavigationOffsets".to_string(),
-        MessageType::M182 { msg: _ } => "SystemInformation".to_string(),
-        MessageType::M0 { msg: _ } => "UnknownMessage".to_string(),
-    }
-}
-
 pub struct JSFFile<T: io::Read + io::Seek> {
     pub reader: T,
 }
