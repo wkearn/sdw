@@ -33,6 +33,11 @@ impl Message {
     }
 }
 
+/// An unknown message type
+///
+/// This simply wraps the byte data of the message.
+/// It is used to represent both private message types
+/// emitted by the system and unimplemented messages.
 #[binread]
 #[br(little,import {message_size:i32})]
 #[derive(Debug, PartialEq)]
@@ -41,6 +46,7 @@ pub struct UnknownMessage {
     data: Vec<u8>,
 }
 
+/// The system information message
 #[binread]
 #[br(little,import {message_size:i32})]
 #[derive(Debug, PartialEq)]
@@ -54,6 +60,7 @@ pub struct SystemInformation {
     serial_number: i32,
 }
 
+/// The navigation offsets message
 #[binread]
 #[br(little)]
 #[derive(Debug, PartialEq)]
@@ -74,6 +81,7 @@ pub struct NavigationOffsets {
     tow_point_elevation: f32,
 }
 
+/// The sonar data message
 #[binread]
 #[br(little,import {message_size:i32})]
 #[derive(Debug, PartialEq)]
@@ -176,6 +184,7 @@ impl SonarData {
     }
 }
 
+/// The NMEA string message
 #[binread]
 #[br(little,import {message_size:i32})]
 #[derive(Debug, PartialEq)]
@@ -188,6 +197,7 @@ pub struct NMEAString {
     data: Vec<u8>,
 }
 
+/// The pitch-roll data message
 #[binread]
 #[br(little)]
 #[derive(Debug, PartialEq)]
@@ -384,7 +394,9 @@ enum MessageType {
     },
 }
 
+/// An Iterator interface to a JSF file
 pub struct JSFFile<T: io::Read + io::Seek> {
+    /// The reader from which bytes are read and parsed
     pub reader: T,
 }
 

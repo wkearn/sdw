@@ -27,6 +27,7 @@ where
     msg_counts
 }
 
+/// Count the SonarDataRecords in a file
 pub fn count(
     path: &std::path::PathBuf,
     output: &Option<std::path::PathBuf>,
