@@ -16,11 +16,11 @@ pub fn list(path: &std::path::PathBuf, output: &Option<std::path::PathBuf>) -> s
                 //let mt = jsf::message_type_string(jsf::message_data(&msg.unwrap()));
                 let rec = SonarDataRecord::from(msg.unwrap());
                 match rec {
-                    SonarDataRecord::Ping(_) => writeln!(writer, "Ping").unwrap(),
-                    SonarDataRecord::Position(_) => writeln!(writer, "Position").unwrap(),
-                    SonarDataRecord::Orientation(_) => writeln!(writer, "Orientation").unwrap(),
-                    SonarDataRecord::Course(_) => writeln!(writer, "Course").unwrap(),
-                    SonarDataRecord::Unknown => writeln!(writer, "Unknown").unwrap(),
+                    SonarDataRecord::Ping(_) => writeln!(writer, "Ping")?,
+                    SonarDataRecord::Position(_) => writeln!(writer, "Position")?,
+                    SonarDataRecord::Orientation(_) => writeln!(writer, "Orientation")?,
+                    SonarDataRecord::Course(_) => writeln!(writer, "Course")?,
+                    SonarDataRecord::Unknown => writeln!(writer, "Unknown")?,
                 };
             }
         }
@@ -29,11 +29,11 @@ pub fn list(path: &std::path::PathBuf, output: &Option<std::path::PathBuf>) -> s
             for msg in jsf {
                 let rec = SonarDataRecord::from(msg.unwrap());
                 match rec {
-                    SonarDataRecord::Ping(_) => writeln!(writer, "Ping").unwrap(),
-                    SonarDataRecord::Position(_) => writeln!(writer, "Position").unwrap(),
-                    SonarDataRecord::Orientation(_) => writeln!(writer, "Orientation").unwrap(),
-                    SonarDataRecord::Course(_) => writeln!(writer, "Course").unwrap(),
-                    SonarDataRecord::Unknown => writeln!(writer, "Unknown").unwrap(),
+                    SonarDataRecord::Ping(_) => writeln!(writer, "Ping")?,
+                    SonarDataRecord::Position(_) => writeln!(writer, "Position")?,
+                    SonarDataRecord::Orientation(_) => writeln!(writer, "Orientation")?,
+                    SonarDataRecord::Course(_) => writeln!(writer, "Course")?,
+                    SonarDataRecord::Unknown => writeln!(writer, "Unknown")?,
                 };
             }
         }
