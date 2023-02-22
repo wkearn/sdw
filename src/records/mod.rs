@@ -44,7 +44,7 @@ impl<T> Ping<T> {
     }
 
     pub fn channel(&self) -> Channel {
-	self.channel
+        self.channel
     }
 }
 
