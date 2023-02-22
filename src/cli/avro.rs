@@ -1,6 +1,6 @@
 //! Converting sonar data files to Avro files
+use crate::model::SonarDataRecord;
 use crate::parser::jsf;
-use crate::records::SonarDataRecord;
 
 use apache_avro::{Codec, Schema, Writer};
 

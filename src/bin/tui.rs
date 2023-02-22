@@ -4,8 +4,8 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use sdw::model::SonarDataRecord;
 use sdw::parser::jsf;
-use sdw::records::SonarDataRecord;
 use std::io;
 use tui::{
     backend::{Backend, CrosstermBackend},

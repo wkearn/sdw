@@ -1,5 +1,5 @@
 //! Parsing Edgetech JSF files
-use crate::records::{Channel, SonarDataRecord};
+use crate::model::{Channel, SonarDataRecord};
 use binrw::io;
 use binrw::{binread, BinRead, BinResult};
 
@@ -411,7 +411,7 @@ impl From<Message> for SonarDataRecord<u16> {
     fn from(msg: Message) -> Self {
         let md = &msg.data;
         match md {
-            MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::records::Ping::new(
+            MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::model::Ping::new(
                 "unknown".to_string(),
                 mt.timestamp(),
                 mt.mixer_frequency(),
@@ -420,7 +420,7 @@ impl From<Message> for SonarDataRecord<u16> {
                 mt.trace().to_vec(),
             )),
             MessageType::M2020 { msg: mt } => {
-                SonarDataRecord::Orientation(crate::records::Orientation::new(
+                SonarDataRecord::Orientation(crate::model::Orientation::new(
                     "unknown".to_string(),
                     mt.timestamp(),
                     mt.pitch(),
