@@ -142,15 +142,15 @@ fn ui<T, B: Backend>(f: &mut Frame<B>, app: &mut App<T>) {
             };
 
             let timestamp = match rec {
-                SonarDataRecord::Ping(rec) => rec.timestamp().format(&format).unwrap(),
-                SonarDataRecord::Course(rec) => rec.timestamp().format(&format).unwrap(),
-                SonarDataRecord::Orientation(rec) => rec.timestamp().format(&format).unwrap(),
-                SonarDataRecord::Position(rec) => rec.timestamp().format(&format).unwrap(),
+                SonarDataRecord::Ping(rec) => rec.timestamp.format(&format).unwrap(),
+                SonarDataRecord::Course(rec) => rec.timestamp.format(&format).unwrap(),
+                SonarDataRecord::Orientation(rec) => rec.timestamp.format(&format).unwrap(),
+                SonarDataRecord::Position(rec) => rec.timestamp.format(&format).unwrap(),
                 SonarDataRecord::Unknown => "".to_string(),
             };
 
             let channel = match rec {
-                SonarDataRecord::Ping(rec) => format!("{:?}", rec.channel()),
+                SonarDataRecord::Ping(rec) => format!("{:?}", rec.channel),
                 SonarDataRecord::Course(_) => "".to_string(),
                 SonarDataRecord::Orientation(_) => "".to_string(),
                 SonarDataRecord::Position(_) => "".to_string(),

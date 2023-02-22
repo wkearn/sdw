@@ -25,11 +25,11 @@ pub struct Message {
 
 impl Message {
     fn channel(&self) -> Channel {
-	match self.channel_number {
-	    0 => Channel::Port,
-	    1 => Channel::Starboard,
-	    _ => Channel::Other
-	}
+        match self.channel_number {
+            0 => Channel::Port,
+            1 => Channel::Starboard,
+            _ => Channel::Other,
+        }
     }
 }
 
@@ -358,7 +358,7 @@ impl PitchRollData {
 #[br(import {message_type:u16,
 	     message_size:i32})]
 #[derive(Debug, PartialEq)]
-pub enum MessageType {
+enum MessageType {
     #[br(pre_assert(message_type==80))]
     M80 {
         #[br(args {message_size})]
