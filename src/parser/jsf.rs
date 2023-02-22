@@ -5,6 +5,7 @@ use binrw::{binread, BinRead, BinResult};
 
 use time::{Duration, OffsetDateTime};
 
+/// A struct representing a message in a JSF file
 #[binread]
 #[br(little, magic = b"\x01\x16")]
 #[derive(Debug, PartialEq)]
@@ -22,19 +23,13 @@ pub struct Message {
     data: MessageType,
 }
 
-pub fn message_type(msg: &Message) -> u16 {
-    msg.message_type
-}
-
-pub fn message_data(msg: &Message) -> &MessageType {
-    &msg.data
-}
-
-pub fn channel(msg: &Message) -> Channel {
-    match msg.channel_number {
-        0 => Channel::Port,
-        1 => Channel::Starboard,
-        _ => Channel::Other,
+impl Message {
+    fn channel(&self) -> Channel {
+	match self.channel_number {
+	    0 => Channel::Port,
+	    1 => Channel::Starboard,
+	    _ => Channel::Other
+	}
     }
 }
 
@@ -425,14 +420,14 @@ impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
 // SonarDataRecord interface
 impl From<Message> for SonarDataRecord<u16> {
     fn from(msg: Message) -> Self {
-        let md = message_data(&msg);
+        let md = &msg.data;
         match md {
             MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::records::Ping::new(
                 "unknown".to_string(),
                 mt.timestamp(),
                 mt.mixer_frequency(),
                 mt.sampling_interval(),
-                channel(&msg),
+                msg.channel(),
                 mt.trace().to_vec(),
             )),
             MessageType::M2020 { msg: mt } => {
