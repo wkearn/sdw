@@ -8,7 +8,7 @@ use time::{OffsetDateTime, PrimitiveDateTime};
 /// An Imagenex881B rotary sonar shot
 #[binread]
 #[br(big, magic = b"81B")]
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Shot {
     n_to_read_index: u8,
     total_bytes: u16,
