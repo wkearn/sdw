@@ -1,7 +1,6 @@
 //! Parsing Imagenex 81b files
 use crate::model::{Channel, SonarDataRecord};
-use binrw::io;
-use binrw::{binread, BinRead, BinResult};
+use binrw::{binread, io, BinRead, BinResult, NullString};
 
 use time::{OffsetDateTime, PrimitiveDateTime};
 
@@ -13,12 +12,12 @@ pub struct Shot {
     n_to_read_index: u8,
     total_bytes: u16,
     n_to_read: u16,
-    #[br(count = 12)]
-    dd: Vec<u8>,
-    #[br(count = 9)]
-    tt: Vec<u8>,
-    #[br(count = 4)]
-    hh: Vec<u8>,
+    #[br(pad_size_to = 12)]
+    dd: NullString,
+    #[br(pad_size_to = 9)]
+    tt: NullString,
+    #[br(pad_size_to = 4)]
+    hh: NullString,
     sample_rate: u8,
     #[br(pad_after = 2)]
     extended_bytes: u8,
@@ -32,8 +31,8 @@ pub struct Shot {
     pulse_length: u8,
     profile: u8,
     velocity: u16,
-    #[br(count = 32)]
-    user_text: Vec<u8>,
+    #[br(pad_size_to = 32)]
+    user_text: NullString,
     frequency: u16,
     #[br(pad_after = 7)]
     azimuth_drive_head: u16,
