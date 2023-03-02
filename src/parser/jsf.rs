@@ -423,6 +423,16 @@ pub struct JSFFile<T: io::Read + io::Seek> {
     pub reader: T,
 }
 
+impl<T> JSFFile<T>
+where
+    T: io::Read + io::Seek,
+{
+    /// Create a JSF file from a reader
+    pub fn new(reader: T) -> Self {
+        JSFFile { reader }
+    }
+}
+
 impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
     type Item = BinResult<Message>;
 
