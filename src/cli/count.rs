@@ -4,7 +4,7 @@ use crate::parser::jsf;
 use binrw::io::BufReader;
 use std::io::{stdout, Write};
 
-fn count_records<T>(file: jsf::JSFFile<T>) -> std::collections::HashMap<String, i64>
+fn count_records<T>(file: jsf::File<T>) -> std::collections::HashMap<String, i64>
 where
     T: std::io::Seek + std::io::Read,
 {
@@ -34,7 +34,7 @@ pub fn count(
 ) -> std::io::Result<()> {
     let f = std::fs::File::open(path)?;
     let reader = BufReader::new(f);
-    let jsf = jsf::JSFFile::new(reader);
+    let jsf = jsf::File::new(reader);
     let counts = count_records(jsf);
 
     match output {

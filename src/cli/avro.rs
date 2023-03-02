@@ -23,7 +23,7 @@ pub fn avro(
 
     let f = std::fs::File::open(path)?;
     let reader = BufReader::new(f);
-    let jsf = jsf::JSFFile::new(reader);
+    let jsf = jsf::File::new(reader);
     let sds = jsf.filter_map(|msg| {
         if let SonarDataRecord::Ping(ping) = SonarDataRecord::from(msg.unwrap()) {
             Some(ping)

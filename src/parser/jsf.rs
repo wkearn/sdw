@@ -418,22 +418,22 @@ enum MessageType {
 }
 
 /// An Iterator interface to a JSF file
-pub struct JSFFile<T: io::Read + io::Seek> {
+pub struct File<T: io::Read + io::Seek> {
     /// The reader from which bytes are read and parsed
     reader: T,
 }
 
-impl<T> JSFFile<T>
+impl<T> File<T>
 where
     T: io::Read + io::Seek,
 {
     /// Create a JSF file from a reader
     pub fn new(reader: T) -> Self {
-        JSFFile { reader }
+        File { reader }
     }
 }
 
-impl<T: io::Read + io::Seek> Iterator for JSFFile<T> {
+impl<T: io::Read + io::Seek> Iterator for File<T> {
     type Item = BinResult<Message>;
 
     fn next(&mut self) -> Option<Self::Item> {

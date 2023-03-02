@@ -20,7 +20,7 @@ fn write_record<T, W: Write>(mut writer: W, rec: SonarDataRecord<T>) -> std::io:
 pub fn list(path: &std::path::PathBuf, output: &Option<std::path::PathBuf>) -> std::io::Result<()> {
     let f = std::fs::File::open(path)?;
     let reader = BufReader::new(f);
-    let jsf = jsf::JSFFile::new(reader);
+    let jsf = jsf::File::new(reader);
     match output {
         Some(path) => {
             let mut writer = std::fs::File::create(path)?;
