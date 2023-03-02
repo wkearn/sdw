@@ -156,6 +156,23 @@ pub struct Course {
     pub heading: Option<f64>,
 }
 
+impl Course {
+    /// Create a new Orientation from the given data
+    pub fn new(
+        source: String,
+        timestamp: OffsetDateTime,
+        speed: Option<f64>,
+        heading: Option<f64>,
+    ) -> Course {
+        Course {
+            source,
+            timestamp,
+            speed,
+            heading,
+        }
+    }
+}
+
 /// A SonarDataRecord encapsulates the data available to SDW
 #[derive(Debug)]
 #[derive(Deserialize, Serialize)]
