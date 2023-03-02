@@ -1,5 +1,6 @@
 //! Parsing XTF files
-use binrw::binread;
+use binrw::{binread, BinRead, BinResult};
+use std::io;
 
 /// The XTFFileHeader
 #[binread]
@@ -258,4 +259,42 @@ pub enum SonarData {
     /// 32 bit sonar data
     #[br(pre_assert(bytes_per_sample==4))]
     U32(#[br(count=num_samples)] Vec<u32>),
+}
+
+/// A representation of an XTF file on disk
+pub struct File<T>
+where
+    T: io::Read + io::Seek,
+{
+    header: FileHeader,
+    reader: T,
+}
+
+impl<T> File<T>
+where
+    T: io::Read + io::Seek,
+{
+    /// Create an XTF file from a reader
+    pub fn new(mut reader: T) -> Self {
+        let header = FileHeader::read(&mut reader).expect("Unable to read XTF file header");
+        File { header, reader }
+    }
+}
+
+impl<T: io::Read + io::Seek> Iterator for File<T> {
+    type Item = BinResult<Packet>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = Packet::read(&mut self.reader);
+        match res {
+            Ok(msg) => Some(Ok(msg)),
+            Err(e) => {
+                if e.is_eof() {
+                    None
+                } else {
+                    Some(Err(e))
+                }
+            }
+        }
+    }
 }
