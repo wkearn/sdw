@@ -114,10 +114,10 @@ pub struct Packet {
 impl Packet {
     /// Return the name of the packet type
     pub fn packet_name(&self) -> String {
-	match self.header {
-	    PacketType::Sonar(_) => "Sonar".to_string(),
-	    PacketType::Unknown => "Unknown".to_string()
-	}
+        match self.header {
+            PacketType::Sonar(_) => "Sonar".to_string(),
+            PacketType::Unknown => "Unknown".to_string(),
+        }
     }
 }
 
