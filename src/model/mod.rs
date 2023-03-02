@@ -7,7 +7,8 @@ use time::OffsetDateTime;
 /// This distinguishes pings to the port side
 /// from those to starboard. All other channels are
 /// currently represented as the Other variant.
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize)]
 pub enum Channel {
     /// A ping to port
     Port,
@@ -19,7 +20,8 @@ pub enum Channel {
 
 /// A representation of a sonar ping
 ///
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
+#[derive(Deserialize, Serialize)]
 pub struct Ping<T> {
     /// The source of the sonar data
     pub source: String,
@@ -60,7 +62,8 @@ impl<T> Ping<T> {
 }
 
 /// The position of a sensor
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(Deserialize, Serialize)]
 pub struct Position {
     /// The source of the position information
     pub source: String,
@@ -98,7 +101,8 @@ impl Position {
 }
 
 /// The orientation of the sensor
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(Deserialize, Serialize)]
 pub struct Orientation {
     /// The source of the orientation data
     pub source: String,
@@ -133,7 +137,8 @@ impl Orientation {
 }
 
 /// The course of the sensor
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(Deserialize, Serialize)]
 pub struct Course {
     /// The source of the course information
     pub source: String,
@@ -148,7 +153,8 @@ pub struct Course {
 }
 
 /// A SonarDataRecord encapsulates the data available to SDW
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
+#[derive(Deserialize, Serialize)]
 pub enum SonarDataRecord<T> {
     /// A wrapper for a Ping
     Ping(Ping<T>),
