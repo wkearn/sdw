@@ -16,7 +16,7 @@ fn count_records() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
- #[test]
+#[test]
 fn count_records_no_file() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("sdw")?;
 
