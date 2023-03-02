@@ -1,6 +1,7 @@
 //! Parsing XTF files
 use binrw::binread;
 
+/// The XTFFileHeader
 #[binread]
 #[br(little, magic = b"\x7b")]
 #[derive(Debug, PartialEq)]
@@ -47,6 +48,7 @@ pub struct FileHeader {
     chaninfos: Vec<ChanInfo>,
 }
 
+/// The ChanInfo struct
 #[binread]
 #[br(little)]
 #[derive(Debug, PartialEq)]
@@ -75,24 +77,32 @@ pub struct ChanInfo {
     sample_format: u8,
 }
 
+/// A directory of packet types
 #[binread]
 #[br(little, import {header_type: u8, num_chans_to_follow: u16})]
 #[derive(Debug, PartialEq)]
 pub enum PacketType {
+    /// A packet for sidescan sonar data
     #[br(pre_assert(header_type==0))]
-    Sonar {
-        #[br(args {num_chans_to_follow} )]
-        hdr: PingHeader,
-    },
+    Sonar(#[br(args {num_chans_to_follow} )] PingHeader),
+    /// An unknown packet type.
+    ///
+    /// This is used as a fallback if no other packet succeeds
     Unknown,
 }
 
+/// An XTF data packet
+///
+/// This assumes that all packets start with fields that
+/// describe the header type, channel number, number of channels,
+/// and number of bytes in the packet, which all of the documented
+/// packet types do. Manufacturer-specific packets may not follow
+/// this structure, and parsing will fail for such packets.
 #[binread]
 #[br(little, magic = 64206u16)]
 #[derive(Debug, PartialEq)]
 pub struct Packet {
-    // Do all packets start with the same header information?
-    pub header_type: u8,
+    header_type: u8,
     sub_channel_number: u8,
     #[br(pad_after = 4)]
     num_chans_to_follow: u16,
@@ -101,6 +111,21 @@ pub struct Packet {
     header: PacketType,
 }
 
+impl Packet {
+    /// Return the name of the packet type
+    pub fn packet_name(&self) -> String {
+	match self.header {
+	    PacketType::Sonar(_) => "Sonar".to_string(),
+	    PacketType::Unknown => "Unknown".to_string()
+	}
+    }
+}
+
+/// A header describing ping-specific information
+///
+/// Timing and navigation information is contained here. The
+/// data for the ping are stored in a Vec<PingChanHeader> with
+/// one element for each channel.
 #[binread]
 #[br(little,import {num_chans_to_follow: u16})]
 #[derive(Debug, PartialEq)]
@@ -180,6 +205,10 @@ pub struct PingHeader {
     channel_data: Vec<PingChanHeader>,
 }
 
+/// A header describing ping- and channel-specific information
+///
+/// The actual sonar return data are stored as a SonarData wrapper
+/// in the data field.
 #[binread]
 #[br(little)]
 #[derive(Debug, PartialEq)]
@@ -209,26 +238,24 @@ pub struct PingChanHeader {
     #[br(pad_after = 4)]
     weight: i16,
     #[br(args {bytes_per_sample: 2, num_samples})]
-    data: SonarData
+    data: SonarData,
 }
 
 #[binread]
 #[br(little, import {bytes_per_sample: u16, num_samples: u32})]
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
+/// An enum to dispatch different sonar data types
+///
+/// Warning: the bytes_per_sample field is currently hardcoded to 2,
+/// so the data will always be 16 bit.
 pub enum SonarData {
+    /// 8 bit sonar data
     #[br(pre_assert(bytes_per_sample==1))]
-    U8(
-	#[br(count=num_samples)]
-	Vec<u8>
-    ),
+    U8(#[br(count=num_samples)] Vec<u8>),
+    /// 16 bit sonar data
     #[br(pre_assert(bytes_per_sample==2))]
-    U16(
-	#[br(count=num_samples)]
-	Vec<u16>
-    ),
+    U16(#[br(count=num_samples)] Vec<u16>),
+    /// 32 bit sonar data
     #[br(pre_assert(bytes_per_sample==4))]
-    U32(
-	#[br(count=num_samples)]
-	Vec<u32>
-    )
+    U32(#[br(count=num_samples)] Vec<u32>),
 }
