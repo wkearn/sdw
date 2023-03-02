@@ -94,11 +94,11 @@ pub struct Packet {
     // Do all packets start with the same header information?
     pub header_type: u8,
     sub_channel_number: u8,
-    #[br(pad_after = 4)]    
+    #[br(pad_after = 4)]
     num_chans_to_follow: u16,
     num_bytes_this_record: u32,
     #[br(args {header_type, num_chans_to_follow},pad_size_to=num_bytes_this_record-14)]
-    pub header: PacketType,
+    header: PacketType,
 }
 
 #[binread]
@@ -208,6 +208,27 @@ pub struct PingChanHeader {
     fixed_vsop: f32,
     #[br(pad_after = 4)]
     weight: i16,
-    #[br(count=num_samples)]
-    data: Vec<u16>
+    #[br(args {bytes_per_sample: 2, num_samples})]
+    data: SonarData
+}
+
+#[binread]
+#[br(little, import {bytes_per_sample: u16, num_samples: u32})]
+#[derive(Debug,PartialEq)]
+pub enum SonarData {
+    #[br(pre_assert(bytes_per_sample==1))]
+    U8(
+	#[br(count=num_samples)]
+	Vec<u8>
+    ),
+    #[br(pre_assert(bytes_per_sample==2))]
+    U16(
+	#[br(count=num_samples)]
+	Vec<u16>
+    ),
+    #[br(pre_assert(bytes_per_sample==4))]
+    U32(
+	#[br(count=num_samples)]
+	Vec<u32>
+    )
 }
