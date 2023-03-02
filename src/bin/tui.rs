@@ -76,7 +76,7 @@ fn main() -> std::io::Result<()> {
     // Load data
     let f = std::fs::File::open("assets/HE501_Hydro3_025.001.jsf")?;
     let reader = BufReader::new(f);
-    let jsf = jsf::JSFFile { reader };
+    let jsf = jsf::JSFFile::new(reader);
     let v: Vec<SonarDataRecord<u16>> = jsf.map(|msg| SonarDataRecord::from(msg.unwrap())).collect();
 
     let app = App::build(v);

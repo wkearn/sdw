@@ -420,7 +420,7 @@ enum MessageType {
 /// An Iterator interface to a JSF file
 pub struct JSFFile<T: io::Read + io::Seek> {
     /// The reader from which bytes are read and parsed
-    pub reader: T,
+    reader: T,
 }
 
 impl<T> JSFFile<T>

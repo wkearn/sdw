@@ -34,7 +34,7 @@ pub fn count(
 ) -> std::io::Result<()> {
     let f = std::fs::File::open(path)?;
     let reader = BufReader::new(f);
-    let jsf = jsf::JSFFile { reader };
+    let jsf = jsf::JSFFile::new(reader);
     let counts = count_records(jsf);
 
     match output {
