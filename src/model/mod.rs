@@ -8,13 +8,17 @@ use time::OffsetDateTime;
 /// from those to starboard. All other channels are
 /// currently represented as the Other variant.
 #[derive(Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialOrd, Ord)]
 #[derive(Deserialize, Serialize)]
+#[derive(Default)]
 pub enum Channel {
     /// A ping to port
     Port,
     /// A ping to starboard
     Starboard,
     /// Some other channel
+    #[default]
     Other,
 }
 
