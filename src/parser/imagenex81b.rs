@@ -101,6 +101,13 @@ pub struct File<T: io::Read + io::Seek> {
     pub reader: T,
 }
 
+impl<T> File<T> where T: io::Read + io::Seek {
+    /// Create an Imagenex 81b file from a reader
+    pub fn new(reader: T) -> Self {
+	File {reader}
+    }
+}
+
 impl<T: io::Read + io::Seek> Iterator for File<T> {
     type Item = BinResult<Shot>;
 
