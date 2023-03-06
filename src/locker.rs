@@ -12,8 +12,9 @@ impl Locker {
     ///
     /// ```
     /// # use sdw::locker::Locker;
-    /// let locker = Locker::open("/home/wkearn/Documents/data/PANGAEA/HE501")
-    ///              .expect("Failed to open Locker");
+    /// # fn main() -> Result<(),Box<dyn std::error::Error>> {
+    /// let locker = Locker::open("/home/wkearn/Documents/data/PANGAEA/HE501")?;
+    /// # Ok(()) }
     /// ```
     pub fn open<P>(path: P) -> io::Result<Self>
     where
@@ -29,9 +30,10 @@ impl Locker {
     /// ```
     /// # use sdw::locker::Locker;
     /// # use std::path::Path;
-    /// let locker = Locker::open("/home/wkearn/Documents/data/PANGAEA/HE501")
-    ///              .expect("Failed to open Locker");
-    /// assert_eq!(locker.path(),Path::new("/home/wkearn/Documents/data/PANGAEA/HE501"))
+    /// # fn main() -> Result<(),Box<dyn std::error::Error>> {
+    /// let locker = Locker::open("/home/wkearn/Documents/data/PANGAEA/HE501")?;
+    /// assert_eq!(locker.path(),Path::new("/home/wkearn/Documents/data/PANGAEA/HE501"));
+    /// # Ok(()) }
     /// ```
     pub fn path(&self) -> &Path {
         &self.path
