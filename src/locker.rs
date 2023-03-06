@@ -105,6 +105,13 @@ impl<'a> Iterator for Iter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
 	self.iter.next()
     }
+
+    fn size_hint(&self) -> (usize,Option<usize>) {
+	self.iter.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for Iter<'a> {    
 }
 
 #[cfg(test)]
