@@ -279,6 +279,11 @@ where
         let header = FileHeader::read(&mut reader).expect("Unable to read XTF file header");
         File { header, reader }
     }
+
+    /// Return a reference to the FileHeader
+    pub fn header(&self) -> &FileHeader {
+	&self.header
+    }
 }
 
 impl<T: io::Read + io::Seek> Iterator for File<T> {
