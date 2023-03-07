@@ -75,11 +75,7 @@ impl Locker {
         Ok(locker)
     }
 
-    /// Scan the `Locker` directory to build the index
-    ///
-    /// This will clear the current index and rescan all of the files in
-    /// the directory.
-    pub fn build_index(&mut self) -> binrw::BinResult<()> {
+    fn build_index(&mut self) -> binrw::BinResult<()> {
         // Clear the tree
         self.tree.clear();
 
