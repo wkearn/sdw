@@ -42,12 +42,10 @@ impl Locker {
             let mut jsf = jsf::File::new(reader);
             loop {
                 let pos = jsf.stream_position()?;
-                let next;
-                match jsf.next() {
-                    Some(val) => next = val,
+                let msg = match jsf.next() {
+                    Some(val) => val,
                     None => break,
                 };
-                let msg = next;
                 let key = create_key(SonarDataRecord::from(msg?));
                 let value = (filepath.clone(), pos);
                 match key {
@@ -96,9 +94,9 @@ impl Locker {
     ///     ))?;
     ///     let rec = locker.get(k)?;    
     ///     let c = create_key(rec).ok_or(std::io::Error::new(
-    /// 	    std::io::ErrorKind::Other,
-    /// 	    "Unknown record retrieved",
-    /// 	    ))?;
+    ///             std::io::ErrorKind::Other,
+    ///             "Unknown record retrieved",
+    ///             ))?;
 
     ///     assert_eq!(c.0, k.0);
     ///     assert_eq!(c.1, k.1);
