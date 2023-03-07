@@ -15,6 +15,18 @@ type LockerKey = (String, Channel, OffsetDateTime);
 type LockerValue = (PathBuf, u64);
 
 /// A representation of an on-disk sonar data set
+///
+/// A `Locker` contains an in-memory [`BTreeMap`] index that maps
+/// keys to a file path and byte offset within that file where the desired
+/// record can be found. 
+/// Keys are a tuple consisting of a string representation of the [`SonarDataRecord`]
+/// enum variant, the instrument [`Channel`], and an [`OffsetDateTime`]
+/// representing the acquisition time of the measurement. Due to this key organization,
+/// queries such as finding all `SonarDataRecord::Ping` records from the
+/// `Channel::Port` between two times are fast.
+///
+/// The channel key only has meaning for the sonar data (`SonarDataRecord::Ping`). All
+/// other records default to `Channel::Other`.
 pub struct Locker {
     path: PathBuf,
     tree: BTreeMap<LockerKey, LockerValue>,
@@ -96,12 +108,12 @@ impl Locker {
         &self.path
     }
 
-    /// Return a reference to the underlying BTreeMap
+    /// Return a reference to the underlying [`BTreeMap`]
     pub fn tree(&self) -> &BTreeMap<LockerKey, LockerValue> {
         &self.tree
     }
 
-    /// Get an iterator over the entries of the B-tree, sorted by key
+    /// Get an iterator over the entries of the locker, sorted by key
     pub fn iter(&self) -> Iter {
         let iter = self.tree.iter();
         Iter { iter }
@@ -164,9 +176,9 @@ pub fn create_key<T>(rec: SonarDataRecord<T>) -> Option<LockerKey> {
     }
 }
 
-/// An iterator over the entries of the BTree
+/// An iterator over the entries of the locker
 ///
-/// This is created by calling `iter` on a `Locker`.
+/// This should be created by calling `iter` on a `Locker`.
 ///
 /// ```
 /// # use sdw::locker::Locker;
