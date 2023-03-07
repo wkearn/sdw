@@ -1,14 +1,15 @@
 //! Lockers for sonar data
 use crate::model::{Channel, SonarDataRecord};
 use crate::parser::jsf;
-use binrw::io::BufReader;
+use binrw::{io::BufReader, BinRead};
 use std::collections::{btree_map, BTreeMap};
 use std::fs::{read_dir, File};
+use std::io::{Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use time::OffsetDateTime;
 
 type LockerKey = (String, Channel, OffsetDateTime);
-type LockerValue = (PathBuf, usize);
+type LockerValue = (PathBuf, u64);
 
 /// A representation of an on-disk sonar data set
 pub struct Locker {
