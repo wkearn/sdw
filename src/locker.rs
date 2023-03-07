@@ -26,6 +26,10 @@ impl Locker {
     /// let locker = Locker::open("assets/HE501")?;
     /// # Ok(()) }
     /// ```
+    ///
+    /// This scans through every file and creates an entry in 
+    /// the locker tree for each record. This can take a while.
+    ///
     /// # Errors
     ///
     /// This function returns an error when `read_dir` errors
