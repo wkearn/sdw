@@ -1,9 +1,9 @@
 //! Lockers for sonar data
 use crate::model::{Channel, SonarDataRecord};
 use crate::parser::jsf;
-use binrw::{BinRead};
+use binrw::BinRead;
 use std::collections::{btree_map, BTreeMap};
-use std::fs::{read_dir, File};
+use std::fs::File;
 use std::io::{Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use time::OffsetDateTime;
@@ -83,7 +83,7 @@ impl Locker {
         // Clear the tree
         self.tree.clear();
 
-        let dir = read_dir(&self.path)?;
+        let dir = self.path.read_dir()?;
 
         // Open a channel for storing key-value pairs read out of the files
         let (tx, rx) = mpsc::channel();
