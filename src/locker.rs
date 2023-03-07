@@ -1,7 +1,7 @@
 //! Lockers for sonar data
 use crate::model::{Channel, SonarDataRecord};
 use crate::parser::jsf;
-use binrw::{io::BufReader, BinRead};
+use binrw::{BinRead};
 use std::collections::{btree_map, BTreeMap};
 use std::fs::{read_dir, File};
 use std::io::{Seek, SeekFrom};
@@ -92,8 +92,7 @@ impl Locker {
             let tx1 = tx.clone();
             thread::spawn(move || -> binrw::BinResult<()> {
                 let filepath = entry?.path();
-                let reader = BufReader::new(File::open(&filepath)?);
-                let mut jsf = jsf::File::new(reader);
+                let mut jsf = jsf::File::open(&filepath)?;
                 loop {
                     let pos = jsf.stream_position()?;
                     let msg = match jsf.next() {
