@@ -18,7 +18,7 @@ type LockerValue = (PathBuf, u64);
 ///
 /// A `Locker` contains an in-memory [`BTreeMap`] index that maps
 /// keys to a file path and byte offset within that file where the desired
-/// record can be found. 
+/// record can be found.
 /// Keys are a tuple consisting of a string representation of the [`SonarDataRecord`]
 /// enum variant, the instrument [`Channel`], and an [`OffsetDateTime`]
 /// representing the acquisition time of the measurement. Due to this key organization,
@@ -55,10 +55,10 @@ impl Locker {
         let tree = BTreeMap::new();
         let path = PathBuf::from(path);
 
-	let mut locker = Locker {path, tree};
+        let mut locker = Locker { path, tree };
 
-	locker.build_index()?;
-        
+        locker.build_index()?;
+
         Ok(locker)
     }
 
@@ -66,51 +66,50 @@ impl Locker {
     ///
     /// This will clear the current index and rescan all of the files in
     /// the directory.
-    pub fn build_index(&mut self) -> binrw::BinResult<()>
-    {
-	// Clear the tree
-	self.tree.clear();
-	
+    pub fn build_index(&mut self) -> binrw::BinResult<()> {
+        // Clear the tree
+        self.tree.clear();
+
         let dir = read_dir(&self.path)?;
 
-	// Open a channel for storing key-value pairs read out of the files
-	let (tx,rx) = mpsc::channel();
+        // Open a channel for storing key-value pairs read out of the files
+        let (tx, rx) = mpsc::channel();
 
-	for entry in dir {
-	    let tx1 = tx.clone();
-	    thread::spawn(move || -> binrw::BinResult<()> {
-		let filepath = entry?.path();
-		let reader = BufReader::new(File::open(&filepath)?);
-		let mut jsf = jsf::File::new(reader);
-		loop {
+        for entry in dir {
+            let tx1 = tx.clone();
+            thread::spawn(move || -> binrw::BinResult<()> {
+                let filepath = entry?.path();
+                let reader = BufReader::new(File::open(&filepath)?);
+                let mut jsf = jsf::File::new(reader);
+                loop {
                     let pos = jsf.stream_position()?;
                     let msg = match jsf.next() {
-			Some(val) => val,
-			None => break,
+                        Some(val) => val,
+                        None => break,
                     };
                     let key = create_key(SonarDataRecord::from(msg?));
                     let value = (filepath.clone(), pos);
-		    tx1.send((key,value)).map_err(|_| std::io::Error::new(
-			std::io::ErrorKind::Other,
-			"Channel sending error",))?;
-		}
-		Ok(())
+                    tx1.send((key, value)).map_err(|_| {
+                        std::io::Error::new(std::io::ErrorKind::Other, "Channel sending error")
+                    })?;
+                }
+                Ok(())
             });
-	}
+        }
 
-	// Explicitly drop the Sender to close the channel
-	drop(tx);
+        // Explicitly drop the Sender to close the channel
+        drop(tx);
 
-	// Read pairs off the channel and insert them in the
-	// tree
-	for rcv in rx {
-	    let (key,value) = rcv;
-	    if let Some(key) = key {
-		self.tree.insert(key,value);
-	    };
-	}
-	
-	Ok(())
+        // Read pairs off the channel and insert them in the
+        // tree
+        for rcv in rx {
+            let (key, value) = rcv;
+            if let Some(key) = key {
+                self.tree.insert(key, value);
+            };
+        }
+
+        Ok(())
     }
 
     /// Return a reference to the path of the locker
@@ -188,9 +187,11 @@ pub fn create_key<T>(rec: SonarDataRecord<T>) -> Option<LockerKey> {
         SonarDataRecord::Position(data) => {
             Some(("Position".to_string(), Channel::default(), data.timestamp))
         }
-        SonarDataRecord::Orientation(data) => {
-            Some(("Orientation".to_string(), Channel::default(), data.timestamp))
-        }
+        SonarDataRecord::Orientation(data) => Some((
+            "Orientation".to_string(),
+            Channel::default(),
+            data.timestamp,
+        )),
         SonarDataRecord::Unknown => None,
     }
 }
