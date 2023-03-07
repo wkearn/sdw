@@ -65,6 +65,11 @@ impl Locker {
         &self.path
     }
 
+    /// Return a reference to the underlying BTreeMap
+    pub fn tree(&self) -> &BTreeMap<LockerKey,LockerValue> {
+	&self.tree
+    }
+
     /// Get an iterator over the entries of the B-tree, sorted by key
     pub fn iter(&self) -> Iter {
 	let iter = self.tree.iter();
