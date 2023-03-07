@@ -5,6 +5,8 @@ use binrw::{binread, BinRead, BinResult};
 
 use time::{Duration, OffsetDateTime};
 
+use std::io::{SeekFrom,Seek};
+
 /// A struct representing a message in a JSF file
 #[binread]
 #[br(little, magic = b"\x01\x16")]
@@ -435,6 +437,23 @@ where
     /// Return the stream position of the underlying reader
     pub fn stream_position(&mut self) -> io::Result<u64> {
 	self.reader.stream_position()
+    }
+}
+
+impl File<binrw::io::BufReader<std::fs::File>> {
+    /// Open a file at the given path as a JSF file
+    pub fn open<P>(path: P) -> binrw::BinResult<Self> where
+	P: AsRef<std::path::Path>
+    {
+	let mut reader = binrw::io::BufReader::new(std::fs::File::open(path)?);
+
+	// Validate file by attempting to read a message
+	Message::read(&mut reader)?;
+
+	// Seek the reader back to the start
+	reader.seek(SeekFrom::Start(0))?;
+	
+	Ok(Self::new(reader))
     }
 }
 
