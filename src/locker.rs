@@ -152,13 +152,13 @@ pub fn create_key<T>(rec: SonarDataRecord<T>) -> Option<LockerKey> {
     match rec {
         SonarDataRecord::Ping(data) => Some(("Ping".to_string(), data.channel, data.timestamp)),
         SonarDataRecord::Course(data) => {
-            Some(("Course".to_string(), Channel::Other, data.timestamp))
+            Some(("Course".to_string(), Channel::default(), data.timestamp))
         }
         SonarDataRecord::Position(data) => {
-            Some(("Position".to_string(), Channel::Other, data.timestamp))
+            Some(("Position".to_string(), Channel::default(), data.timestamp))
         }
         SonarDataRecord::Orientation(data) => {
-            Some(("Orientation".to_string(), Channel::Other, data.timestamp))
+            Some(("Orientation".to_string(), Channel::default(), data.timestamp))
         }
         SonarDataRecord::Unknown => None,
     }
