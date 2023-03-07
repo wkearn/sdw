@@ -1,7 +1,7 @@
 //! Lockers for sonar data
 use crate::model::{Channel, SonarDataRecord};
 use crate::parser::jsf;
-use binrw::{io::BufReader,BinRead};
+use binrw::BinRead;
 use std::collections::HashMap;
 use std::collections::{btree_map, BTreeMap};
 use std::fs::File;
@@ -11,17 +11,6 @@ use time::OffsetDateTime;
 
 use std::sync::mpsc;
 use std::thread;
-
-/// Read a `SonarDataRecord` from a path and offset
-fn read_record<P>(path: P, offset: u64) -> binrw::BinResult<SonarDataRecord<u16>>
-where
-    P: AsRef<Path>,
-{
-    let mut f = File::open(path)?;
-    f.seek(SeekFrom::Start(offset))?;
-    let msg = jsf::Message::read(&mut f)?;
-    Ok(SonarDataRecord::from(msg))
-}
 
 type LockerKey = (String, OffsetDateTime, Channel);
 type LockerValue = (PathBuf, u64);
@@ -44,7 +33,7 @@ type LockerValue = (PathBuf, u64);
 pub struct Locker {
     path: PathBuf,
     tree: BTreeMap<LockerKey, LockerValue>,
-    filemap: HashMap<PathBuf, jsf::File<BufReader<File>>>,
+    filemap: HashMap<PathBuf, File>,
 }
 
 impl Locker {
@@ -68,10 +57,14 @@ impl Locker {
         PathBuf: From<P>,
     {
         let tree = BTreeMap::new();
-	let filemap = HashMap::new();
+        let filemap = HashMap::new();
         let path = PathBuf::from(path);
 
-        let mut locker = Locker { path, tree, filemap };
+        let mut locker = Locker {
+            path,
+            tree,
+            filemap,
+        };
 
         locker.build_index()?;
 
@@ -89,12 +82,12 @@ impl Locker {
 
         for entry in dir {
             let tx1 = tx.clone();
-	    let filepath = entry?.path();
+            let filepath = entry?.path();
 
-	    // Open the JSF file and insert it into the filemap
-	    let jsf1 = jsf::File::open(&filepath)?;
-	    self.filemap.insert(filepath.clone(),jsf1);
-	    
+            // Open the file and insert it into the filemap
+            let jsf1 = std::fs::File::open(&filepath)?;
+            self.filemap.insert(filepath.clone(), jsf1);
+
             let mut jsf = jsf::File::open(&filepath)?;
             thread::spawn(move || -> binrw::BinResult<()> {
                 loop {
@@ -111,7 +104,6 @@ impl Locker {
                 }
                 Ok(())
             });
-	    
         }
 
         // Explicitly drop the Sender to close the channel
@@ -154,6 +146,20 @@ impl Locker {
         Iter { iter }
     }
 
+    fn read_record(&self, path: &PathBuf, offset: &u64) -> binrw::BinResult<SonarDataRecord<u16>> {
+        // Find the file handle in the filemap
+        let mut f = self.filemap.get(path).ok_or(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Key not found",
+        ))?;
+
+        // Seek to the desired offset
+        f.seek(SeekFrom::Start(*offset))?;
+
+        // Read a message and convert to SonarDataRecord
+        Ok(SonarDataRecord::from(jsf::Message::read(&mut f)?))
+    }
+
     /// Get the SonarDataRecord identified by the key
     ///
     /// ```
@@ -184,7 +190,7 @@ impl Locker {
             std::io::ErrorKind::Other,
             "Key not found",
         ))?;
-        read_record(path, *offset)
+        self.read_record(path, offset)
     }
 }
 
