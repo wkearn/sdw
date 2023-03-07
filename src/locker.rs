@@ -224,14 +224,10 @@ pub struct Iter<'a> {
 }
 
 impl<'a> Iterator for Iter<'a> {
-    type Item = binrw::BinResult<SonarDataRecord<u16>>;
+    type Item = (&'a LockerKey, &'a LockerValue);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some((_, (path, offset))) = self.iter.next() {
-	    Some(read_record(path,*offset))
-        } else {
-            None
-        }
+	self.iter.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

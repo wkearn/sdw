@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use sdw::{locker::Locker, model::{Channel,SonarDataRecord}};
+use sdw::{locker::Locker, model::Channel};
 use time::OffsetDateTime;
 
 pub fn locker_open(c: &mut Criterion) {
@@ -15,12 +15,7 @@ pub fn iterator_filter(c: &mut Criterion) {
 
     c.bench_function("iterator_filter", |b| {
         b.iter(|| {
-            locker.iter().filter(|rec| {
-		match rec {
-		    Ok(SonarDataRecord::Ping(_)) => true,
-		    _ => false
-		}
-	    }).count();
+            locker.iter().filter(|(k, _)| k.0 == "Ping").count();
         })
     });
 }
@@ -34,14 +29,14 @@ pub fn range_filter(c: &mut Criterion) {
                 .tree()
                 .range(
                     (
-                        "Ping".to_string(),			
+                        "Ping".to_string(),
                         OffsetDateTime::UNIX_EPOCH,
-			Channel::Port,
+                        Channel::Port,
                     )
                         ..(
-                            "Ping".to_string(),                            
+                            "Ping".to_string(),
                             OffsetDateTime::now_utc(),
-			    Channel::Starboard,
+                            Channel::Starboard,
                         ),
                 )
                 .count();
