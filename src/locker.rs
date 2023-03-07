@@ -1,7 +1,8 @@
 //! Lockers for sonar data
 use crate::model::{Channel, SonarDataRecord};
 use crate::parser::jsf;
-use binrw::BinRead;
+use binrw::{io::BufReader,BinRead};
+use std::collections::HashMap;
 use std::collections::{btree_map, BTreeMap};
 use std::fs::File;
 use std::io::{Seek, SeekFrom};
@@ -43,6 +44,7 @@ type LockerValue = (PathBuf, u64);
 pub struct Locker {
     path: PathBuf,
     tree: BTreeMap<LockerKey, LockerValue>,
+    filemap: HashMap<PathBuf, jsf::File<BufReader<File>>>,
 }
 
 impl Locker {
@@ -66,9 +68,10 @@ impl Locker {
         PathBuf: From<P>,
     {
         let tree = BTreeMap::new();
+	let filemap = HashMap::new();
         let path = PathBuf::from(path);
 
-        let mut locker = Locker { path, tree };
+        let mut locker = Locker { path, tree, filemap };
 
         locker.build_index()?;
 
@@ -86,9 +89,14 @@ impl Locker {
 
         for entry in dir {
             let tx1 = tx.clone();
+	    let filepath = entry?.path();
+
+	    // Open the JSF file and insert it into the filemap
+	    let jsf1 = jsf::File::open(&filepath)?;
+	    self.filemap.insert(filepath.clone(),jsf1);
+	    
+            let mut jsf = jsf::File::open(&filepath)?;
             thread::spawn(move || -> binrw::BinResult<()> {
-                let filepath = entry?.path();
-                let mut jsf = jsf::File::open(&filepath)?;
                 loop {
                     let pos = jsf.stream_position()?;
                     let msg = match jsf.next() {
@@ -103,6 +111,7 @@ impl Locker {
                 }
                 Ok(())
             });
+	    
         }
 
         // Explicitly drop the Sender to close the channel
