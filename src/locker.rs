@@ -27,7 +27,7 @@ impl Locker {
     /// # Ok(()) }
     /// ```
     ///
-    /// This scans through every file and creates an entry in 
+    /// This scans through every file and creates an entry in
     /// the locker tree for each record. This can take a while.
     ///
     /// # Errors
