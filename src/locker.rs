@@ -83,9 +83,49 @@ impl Locker {
         let iter = self.tree.iter();
         Iter { iter }
     }
+
+    /// Get the SonarDataRecord identified by the key
+    ///
+    /// ```
+    /// # use sdw::locker::{create_key,Locker};
+    /// # fn get_test() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let locker = Locker::open("assets/HE501")?;
+    ///     let (k, _) = locker.tree().first_key_value().ok_or(std::io::Error::new(
+    ///         std::io::ErrorKind::Other,
+    ///         "Key not found",
+    ///     ))?;
+    ///     let rec = locker.get(k)?;    
+    ///     let c = create_key(rec).ok_or(std::io::Error::new(
+    /// 	    std::io::ErrorKind::Other,
+    /// 	    "Unknown record retrieved",
+    /// 	    ))?;
+
+    ///     assert_eq!(c.0, k.0);
+    ///     assert_eq!(c.1, k.1);
+    ///     assert_eq!(c.2, k.2);
+    /// #    Ok(()) }
+    /// ```
+    /// # Errors
+    ///
+    /// This method returns an error if the key is not found in the index tree or
+    /// if there is an error reading the record from the file.
+    pub fn get(&self, key: &LockerKey) -> binrw::BinResult<SonarDataRecord<u16>> {
+        let (path, offset) = self.tree.get(key).ok_or(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Key not found",
+        ))?;
+        let mut f = File::open(path)?;
+        f.seek(SeekFrom::Start(*offset))?;
+        let msg = jsf::Message::read(&mut f)?;
+        Ok(SonarDataRecord::from(msg))
+    }
 }
 
-fn create_key<T>(rec: SonarDataRecord<T>) -> Option<(String, Channel, OffsetDateTime)> {
+/// Create a LockerKey from a SonarDataRecord
+///
+/// Returns `None` if the rec is `SonarDataRecord::Unknown`, otherwise returns
+/// `Some(key)` with an appropriately formatted key.
+pub fn create_key<T>(rec: SonarDataRecord<T>) -> Option<LockerKey> {
     match rec {
         SonarDataRecord::Ping(data) => Some(("Ping".to_string(), data.channel, data.timestamp)),
         SonarDataRecord::Course(data) => {
