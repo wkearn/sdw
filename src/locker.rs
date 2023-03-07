@@ -11,7 +11,7 @@ use time::OffsetDateTime;
 use std::sync::mpsc;
 use std::thread;
 
-type LockerKey = (String, Channel, OffsetDateTime);
+type LockerKey = (String, OffsetDateTime, Channel);
 type LockerValue = (PathBuf, u64);
 
 /// A representation of an on-disk sonar data set
@@ -20,10 +20,12 @@ type LockerValue = (PathBuf, u64);
 /// keys to a file path and byte offset within that file where the desired
 /// record can be found.
 /// Keys are a tuple consisting of a string representation of the [`SonarDataRecord`]
-/// enum variant, the instrument [`Channel`], and an [`OffsetDateTime`]
-/// representing the acquisition time of the measurement. Due to this key organization,
+/// enum variant, an [`OffsetDateTime`] representing the acquisition time
+/// of the measurement and a [`Channel`]. Due to this key organization,
 /// queries such as finding all `SonarDataRecord::Ping` records from the
-/// `Channel::Port` between two times are fast.
+/// `Channel::Port` between two times are fast. The channel is after the time
+/// because it is assumed that typical applications (i.e. mosaicking) will want to process
+/// starboard and port pings simultaneously.
 ///
 /// The channel key only has meaning for the sonar data (`SonarDataRecord::Ping`). All
 /// other records default to `Channel::Other`.
@@ -180,17 +182,17 @@ impl Locker {
 /// `Some(key)` with an appropriately formatted key.
 pub fn create_key<T>(rec: SonarDataRecord<T>) -> Option<LockerKey> {
     match rec {
-        SonarDataRecord::Ping(data) => Some(("Ping".to_string(), data.channel, data.timestamp)),
+        SonarDataRecord::Ping(data) => Some(("Ping".to_string(), data.timestamp, data.channel)),
         SonarDataRecord::Course(data) => {
-            Some(("Course".to_string(), Channel::default(), data.timestamp))
+            Some(("Course".to_string(), data.timestamp, Channel::default()))
         }
         SonarDataRecord::Position(data) => {
-            Some(("Position".to_string(), Channel::default(), data.timestamp))
+            Some(("Position".to_string(), data.timestamp, Channel::default()))
         }
         SonarDataRecord::Orientation(data) => Some((
             "Orientation".to_string(),
-            Channel::default(),
             data.timestamp,
+            Channel::default(),
         )),
         SonarDataRecord::Unknown => None,
     }

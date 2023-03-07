@@ -29,14 +29,14 @@ pub fn range_filter(c: &mut Criterion) {
                 .tree()
                 .range(
                     (
-                        "Ping".to_string(),
-                        Channel::Port,
+                        "Ping".to_string(),			
                         OffsetDateTime::UNIX_EPOCH,
+			Channel::Port,
                     )
                         ..(
-                            "Ping".to_string(),
-                            Channel::Starboard,
+                            "Ping".to_string(),                            
                             OffsetDateTime::now_utc(),
+			    Channel::Starboard,
                         ),
                 )
                 .count();
