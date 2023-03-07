@@ -39,10 +39,17 @@ impl Locker {
         for entry in dir {
             let filepath = entry?.path();
             let reader = BufReader::new(File::open(&filepath)?);
-            let jsf = jsf::File::new(reader);
-            for (i, msg) in jsf.enumerate() {
+            let mut jsf = jsf::File::new(reader);
+            loop {
+                let pos = jsf.stream_position()?;
+                let next;
+                match jsf.next() {
+                    Some(val) => next = val,
+                    None => break,
+                };
+                let msg = next;
                 let key = create_key(SonarDataRecord::from(msg?));
-                let value = (filepath.clone(), i);
+                let value = (filepath.clone(), pos);
                 match key {
                     Some(k) => tree.insert(k, value),
                     None => None,
