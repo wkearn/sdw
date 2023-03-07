@@ -32,7 +32,7 @@ type LockerValue = (PathBuf, u64);
 /// other records default to `Channel::Other`.
 pub struct Locker {
     path: PathBuf,
-    tree: BTreeMap<LockerKey, LockerValue>,
+    index: BTreeMap<LockerKey, LockerValue>,
     filemap: HashMap<PathBuf, File>,
 }
 
@@ -56,13 +56,13 @@ impl Locker {
     where
         PathBuf: From<P>,
     {
-        let tree = BTreeMap::new();
+        let index = BTreeMap::new();
         let filemap = HashMap::new();
         let path = PathBuf::from(path);
 
         let mut locker = Locker {
             path,
-            tree,
+            index,
             filemap,
         };
 
@@ -73,7 +73,7 @@ impl Locker {
 
     fn build_index(&mut self) -> binrw::BinResult<()> {
         // Clear the tree
-        self.tree.clear();
+        self.index.clear();
 
         let dir = self.path.read_dir()?;
 
@@ -115,7 +115,7 @@ impl Locker {
         for rcv in rx {
             let (key, value) = rcv;
             if let Some(key) = key {
-                self.tree.insert(key, value);
+                self.index.insert(key, value);
             };
         }
 
@@ -136,14 +136,14 @@ impl Locker {
         &self.path
     }
 
-    /// Return a reference to the underlying [`BTreeMap`]
-    pub fn tree(&self) -> &BTreeMap<LockerKey, LockerValue> {
-        &self.tree
+    /// Return a reference to the underlying [`BTreeMap`] index
+    pub fn index(&self) -> &BTreeMap<LockerKey, LockerValue> {
+        &self.index
     }
 
     /// Get an iterator over the entries of the locker, sorted by key
     pub fn iter(&self) -> Iter {
-        let iter = self.tree.iter();
+        let iter = self.index.iter();
         Iter { iter }
     }
 
@@ -167,10 +167,11 @@ impl Locker {
     /// # use sdw::locker::{create_key,Locker};
     /// # fn get_test() -> Result<(), Box<dyn std::error::Error>> {
     /// let locker = Locker::open("assets/HE501")?;
-    /// let (k, _) = locker.tree().first_key_value().ok_or(std::io::Error::new(
-    ///     std::io::ErrorKind::Other,
-    ///     "Key not found",
-    /// ))?;
+    /// let (k, _) = locker
+    ///              .index()
+    ///              .first_key_value()
+    ///              .ok_or(std::io::Error::new(std::io::ErrorKind::Other,
+    ///                                         "Key not found"))?;
     /// let rec = locker.get(k)?;    
     /// let c = create_key(rec).ok_or(std::io::Error::new(
     ///         std::io::ErrorKind::Other,
@@ -187,7 +188,7 @@ impl Locker {
     /// This method returns an error if the key is not found in the index tree or
     /// if there is an error reading the record from the file.
     pub fn get(&self, key: &LockerKey) -> binrw::BinResult<SonarDataRecord<u16>> {
-        let (path, offset) = self.tree.get(key).ok_or(std::io::Error::new(
+        let (path, offset) = self.index.get(key).ok_or(std::io::Error::new(
             std::io::ErrorKind::Other,
             "Key not found",
         ))?;

@@ -26,7 +26,7 @@ pub fn range_filter(c: &mut Criterion) {
     c.bench_function("range_filter", |b| {
         b.iter(|| {
             locker
-                .tree()
+                .index()
                 .range(
                     (
                         "Ping".to_string(),
@@ -50,7 +50,7 @@ pub fn get_locker(c: &mut Criterion) {
     c.bench_function("get_locker", |b| {
         b.iter(|| {
             let (k, _) = locker
-                .tree()
+                .index()
                 .first_key_value()
                 .ok_or(std::io::Error::new(
                     std::io::ErrorKind::Other,
