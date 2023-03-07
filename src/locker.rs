@@ -8,6 +8,9 @@ use std::io::{Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use time::OffsetDateTime;
 
+use std::sync::mpsc;
+use std::thread;
+
 type LockerKey = (String, Channel, OffsetDateTime);
 type LockerValue = (PathBuf, u64);
 
@@ -40,24 +43,42 @@ impl Locker {
         let mut tree = BTreeMap::new();
         let path = PathBuf::from(path);
         let dir = read_dir(&path)?;
+
+	let (tx,rx) = mpsc::channel();
+	
         for entry in dir {
-            let filepath = entry?.path();
-            let reader = BufReader::new(File::open(&filepath)?);
-            let mut jsf = jsf::File::new(reader);
-            loop {
-                let pos = jsf.stream_position()?;
-                let msg = match jsf.next() {
-                    Some(val) => val,
-                    None => break,
-                };
-                let key = create_key(SonarDataRecord::from(msg?));
-                let value = (filepath.clone(), pos);
-                match key {
-                    Some(k) => tree.insert(k, value),
-                    None => None,
-                };
-            }
-        }
+	    let tx1 = tx.clone();
+	    thread::spawn(move || -> binrw::BinResult<()> {
+		let filepath = entry?.path();
+		let reader = BufReader::new(File::open(&filepath)?);
+		let mut jsf = jsf::File::new(reader);
+		loop {
+                    let pos = jsf.stream_position()?;
+                    let msg = match jsf.next() {
+			Some(val) => val,
+			None => break,
+                    };
+                    let key = create_key(SonarDataRecord::from(msg?));
+                    let value = (filepath.clone(), pos);
+		    tx1.send((key,value)).map_err(|_| std::io::Error::new(
+			std::io::ErrorKind::Other,
+			"Channel sending error",))?;
+		}
+		Ok(())
+            });
+	}
+
+	// Explicitly drop the Sender to close the channel
+	drop(tx);
+
+	// Read pairs off the channel and insert them in the
+	// tree
+	for rcv in rx {
+	    let (key,value) = rcv;
+	    if let Some(key) = key {
+		tree.insert(key,value);
+	    };
+	}
         Ok(Locker { path, tree })
     }
 
