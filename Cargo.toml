@@ -17,3 +17,8 @@ crossterm = "0.25"
 [dev-dependencies]
 assert_cmd = "2.0.8"
 predicates = "2.1.5"
+criterion = "0.3"
+
+[[bench]]
+name = "locker"
+harness = false
