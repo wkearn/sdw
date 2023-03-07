@@ -121,5 +121,4 @@ impl<'a> ExactSizeIterator for Iter<'a> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
 }
