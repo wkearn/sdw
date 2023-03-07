@@ -89,6 +89,7 @@ impl Locker {
             self.filemap.insert(filepath.clone(), jsf1);
 
             let mut jsf = jsf::File::open(&filepath)?;
+	    // TODO: Handle errors correctly
             thread::spawn(move || -> binrw::BinResult<()> {
                 loop {
                     let pos = jsf.stream_position()?;
