@@ -431,6 +431,11 @@ where
     pub fn new(reader: T) -> Self {
         File { reader }
     }
+
+    /// Return the stream position of the underlying reader
+    pub fn stream_position(&mut self) -> io::Result<u64> {
+	self.reader.stream_position()
+    }
 }
 
 impl<T: io::Read + io::Seek> Iterator for File<T> {
