@@ -11,6 +11,17 @@ use time::OffsetDateTime;
 use std::sync::mpsc;
 use std::thread;
 
+/// Read a `SonarDataRecord` from a path and offset
+fn read_record<P>(path: P, offset: u64) -> binrw::BinResult<SonarDataRecord<u16>>
+where
+    P: AsRef<Path>,
+{
+    let mut f = File::open(path)?;
+    f.seek(SeekFrom::Start(offset))?;
+    let msg = jsf::Message::read(&mut f)?;
+    Ok(SonarDataRecord::from(msg))
+}
+
 type LockerKey = (String, OffsetDateTime, Channel);
 type LockerValue = (PathBuf, u64);
 
@@ -169,10 +180,7 @@ impl Locker {
             std::io::ErrorKind::Other,
             "Key not found",
         ))?;
-        let mut f = File::open(path)?;
-        f.seek(SeekFrom::Start(*offset))?;
-        let msg = jsf::Message::read(&mut f)?;
-        Ok(SonarDataRecord::from(msg))
+	read_record(path,*offset)
     }
 }
 
@@ -216,10 +224,14 @@ pub struct Iter<'a> {
 }
 
 impl<'a> Iterator for Iter<'a> {
-    type Item = (&'a LockerKey, &'a LockerValue);
+    type Item = binrw::BinResult<SonarDataRecord<u16>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
+        if let Some((_, (path, offset))) = self.iter.next() {
+	    Some(read_record(path,*offset))
+        } else {
+            None
+        }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
