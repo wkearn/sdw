@@ -112,21 +112,21 @@ impl Locker {
     /// ```
     /// # use sdw::locker::{create_key,Locker};
     /// # fn get_test() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let locker = Locker::open("assets/HE501")?;
-    ///     let (k, _) = locker.tree().first_key_value().ok_or(std::io::Error::new(
+    /// let locker = Locker::open("assets/HE501")?;
+    /// let (k, _) = locker.tree().first_key_value().ok_or(std::io::Error::new(
+    ///     std::io::ErrorKind::Other,
+    ///     "Key not found",
+    /// ))?;
+    /// let rec = locker.get(k)?;    
+    /// let c = create_key(rec).ok_or(std::io::Error::new(
     ///         std::io::ErrorKind::Other,
-    ///         "Key not found",
-    ///     ))?;
-    ///     let rec = locker.get(k)?;    
-    ///     let c = create_key(rec).ok_or(std::io::Error::new(
-    ///             std::io::ErrorKind::Other,
-    ///             "Unknown record retrieved",
-    ///             ))?;
+    ///         "Unknown record retrieved",
+    ///         ))?;
 
-    ///     assert_eq!(c.0, k.0);
-    ///     assert_eq!(c.1, k.1);
-    ///     assert_eq!(c.2, k.2);
-    /// #    Ok(()) }
+    /// assert_eq!(c.0, k.0);
+    /// assert_eq!(c.1, k.1);
+    /// assert_eq!(c.2, k.2);
+    /// # Ok(()) }
     /// ```
     /// # Errors
     ///
