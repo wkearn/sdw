@@ -180,7 +180,7 @@ impl Locker {
             std::io::ErrorKind::Other,
             "Key not found",
         ))?;
-	read_record(path,*offset)
+        read_record(path, *offset)
     }
 }
 
@@ -227,7 +227,7 @@ impl<'a> Iterator for Iter<'a> {
     type Item = (&'a LockerKey, &'a LockerValue);
 
     fn next(&mut self) -> Option<Self::Item> {
-	self.iter.next()
+        self.iter.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
