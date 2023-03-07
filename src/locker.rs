@@ -52,13 +52,31 @@ impl Locker {
     where
         PathBuf: From<P>,
     {
-        let mut tree = BTreeMap::new();
+        let tree = BTreeMap::new();
         let path = PathBuf::from(path);
-        let dir = read_dir(&path)?;
 
-	let (tx,rx) = mpsc::channel();
+	let mut locker = Locker {path, tree};
+
+	locker.build_index()?;
+        
+        Ok(locker)
+    }
+
+    /// Scan the `Locker` directory to build the index
+    ///
+    /// This will clear the current index and rescan all of the files in
+    /// the directory.
+    pub fn build_index(&mut self) -> binrw::BinResult<()>
+    {
+	// Clear the tree
+	self.tree.clear();
 	
-        for entry in dir {
+        let dir = read_dir(&self.path)?;
+
+	// Open a channel for storing key-value pairs read out of the files
+	let (tx,rx) = mpsc::channel();
+
+	for entry in dir {
 	    let tx1 = tx.clone();
 	    thread::spawn(move || -> binrw::BinResult<()> {
 		let filepath = entry?.path();
@@ -88,10 +106,11 @@ impl Locker {
 	for rcv in rx {
 	    let (key,value) = rcv;
 	    if let Some(key) = key {
-		tree.insert(key,value);
+		self.tree.insert(key,value);
 	    };
 	}
-        Ok(Locker { path, tree })
+	
+	Ok(())
     }
 
     /// Return a reference to the path of the locker
