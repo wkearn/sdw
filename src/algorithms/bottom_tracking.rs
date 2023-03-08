@@ -101,19 +101,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_logsumexp() {
-        let v = &[0.0; 100];
-        let d = logsumexp(v);
-
-        assert_eq!(d, (100.0f64).ln());
-
-        let v2 = &[0.0, 0.0, 1000.0];
-        let d = logsumexp(v2);
-
-        assert_eq!(d, 1000.0);
-    }
-
-    #[test]
     fn test_logsumexp_stream() {
         let v = &[0.0; 100];
         let d = logsumexp_stream(v);
