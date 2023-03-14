@@ -5,7 +5,7 @@ use binrw::{binread, BinRead, BinResult};
 
 use time::{Duration, OffsetDateTime};
 
-use std::io::{Seek, SeekFrom};
+use std::io::Seek;
 
 /// A struct representing a message in a JSF file
 #[binread]
@@ -452,7 +452,7 @@ impl File<binrw::io::BufReader<std::fs::File>> {
         Message::read(&mut reader)?;
 
         // Seek the reader back to the start
-        reader.seek(SeekFrom::Start(0))?;
+        reader.rewind()?;
 
         Ok(Self::new(reader))
     }
