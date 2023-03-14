@@ -8,16 +8,15 @@ use std::io;
 #[derive(Debug, PartialEq)]
 pub struct FileHeader {
     system_type: u8,
-    #[br(count = 8,try_map = |x: Vec<u8>| String::from_utf8(x))]
-    recording_program_name: String,
-    #[br(count = 8,try_map = |x: Vec<u8>| String::from_utf8(x))]
+    #[br(count = 8,try_map = String::from_utf8)] recording_program_name: String,
+    #[br(count = 8,try_map = String::from_utf8)]
     recording_program_version: String,
-    #[br(count = 16,try_map = |x: Vec<u8>| String::from_utf8(x))]
+    #[br(count = 16,try_map = String::from_utf8)]
     sonar_name: String,
     sensors_type: u16,
-    #[br(count = 64,try_map = |x: Vec<u8>| String::from_utf8(x))]
+    #[br(count = 64,try_map = String::from_utf8)]
     note_string: String,
-    #[br(count = 64,try_map = |x: Vec<u8>| String::from_utf8(x))]
+    #[br(count = 64,try_map = String::from_utf8)]
     file_name: String,
     nav_units: u16,
     number_of_sonar_channels: u16,
@@ -60,7 +59,7 @@ pub struct ChanInfo {
     unipolar: u16,
     #[br(pad_after = 4)]
     bytes_per_sample: u16,
-    #[br(count = 16,try_map = |x: Vec<u8>| String::from_utf8(x))]
+    #[br(count = 16,try_map = String::from_utf8)]
     channel_name: String,
     volt_scale: f32,
     frequency: f32,
