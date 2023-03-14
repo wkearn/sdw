@@ -185,8 +185,9 @@ impl SonarData {
     }
 
     /// Return the sonar data trace
-    pub fn trace(&self) -> &Vec<u16> {
-        &self.trace
+    pub fn trace(&self) -> Vec<f32> {
+	let scale: f32 = 2.0f32.powi(-(i32::from(self.weighting_factor)));
+        self.trace.iter().map(|&x| f32::from(x) * scale).collect()
     }
 }
 
@@ -477,7 +478,7 @@ impl<T: io::Read + io::Seek> Iterator for File<T> {
 }
 
 // SonarDataRecord interface
-impl From<Message> for SonarDataRecord<u16> {
+impl From<Message> for SonarDataRecord<f32> {
     fn from(msg: Message) -> Self {
         let md = &msg.data;
         match md {
@@ -487,7 +488,7 @@ impl From<Message> for SonarDataRecord<u16> {
                 mt.mixer_frequency(),
                 mt.sampling_interval(),
                 msg.channel(),
-                mt.trace().to_vec(),
+                mt.trace(),
             )),
             MessageType::M2020 { msg: mt } => {
                 SonarDataRecord::Orientation(crate::model::Orientation::new(

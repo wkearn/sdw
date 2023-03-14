@@ -147,7 +147,7 @@ impl Locker {
         Iter { iter }
     }
 
-    fn read_record(&self, path: &PathBuf, offset: &u64) -> binrw::BinResult<SonarDataRecord<u16>> {
+    fn read_record(&self, path: &PathBuf, offset: &u64) -> binrw::BinResult<SonarDataRecord<f32>> {
         // Find the file handle in the filemap
         let mut f = self.filemap.get(path).ok_or(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -187,7 +187,7 @@ impl Locker {
     ///
     /// This method returns an error if the key is not found in the index tree or
     /// if there is an error reading the record from the file.
-    pub fn get(&self, key: &LockerKey) -> binrw::BinResult<SonarDataRecord<u16>> {
+    pub fn get(&self, key: &LockerKey) -> binrw::BinResult<SonarDataRecord<f32>> {
         let (path, offset) = self.index.get(key).ok_or(std::io::Error::new(
             std::io::ErrorKind::Other,
             "Key not found",
