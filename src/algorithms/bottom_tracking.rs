@@ -32,29 +32,34 @@ pub fn bottom_track(data: Vec<u16>) -> Vec<f64> {
     let theta = maximize(w0.as_slice(), yc.as_slice(), ys, n);
 
     let iterations = 10;
-    
-    let theta2 = (1..iterations).fold(theta,|acc,_| {
-	em_step(acc,prior.as_slice(),yc.as_slice(),ys,n)
+
+    let theta2 = (1..iterations).fold(theta, |acc, _| {
+        em_step(acc, prior.as_slice(), yc.as_slice(), ys, n)
     });
-    
-    expectation(theta2,prior.as_slice(),yc.as_slice(),ys,n)
+
+    expectation(theta2, prior.as_slice(), yc.as_slice(), ys, n)
 }
 
-fn em_step(theta: (f64,f64), p0: &[f64], yc: &[u32], ys: u32, n: i32) -> (f64,f64) {
-    let w = expectation(theta,p0,yc,ys,n);
-    maximize(w.as_slice(),yc,ys,n)
+fn em_step(theta: (f64, f64), p0: &[f64], yc: &[u32], ys: u32, n: i32) -> (f64, f64) {
+    let w = expectation(theta, p0, yc, ys, n);
+    maximize(w.as_slice(), yc, ys, n)
 }
 
 fn expectation(theta: (f64, f64), p0: &[f64], yc: &[u32], ys: u32, n: i32) -> Vec<f64> {
     let (lambda1, lambda2) = theta;
 
-    let v: Vec<f64> = yc.iter().zip(p0.iter()).zip(1..n).map(|((&y, p), tau)| {
-        lambda1.ln() * f64::from(tau)
-            + lambda2.ln() * f64::from(n - tau)
-            + (lambda2 - lambda1) * f64::from(y)
-            + lambda2 * f64::from(ys)
-            + p
-    }).collect();
+    let v: Vec<f64> = yc
+        .iter()
+        .zip(p0.iter())
+        .zip(1..n)
+        .map(|((&y, p), tau)| {
+            lambda1.ln() * f64::from(tau)
+                + lambda2.ln() * f64::from(n - tau)
+                + (lambda2 - lambda1) * f64::from(y)
+                + lambda2 * f64::from(ys)
+                + p
+        })
+        .collect();
 
     softmax(v.as_slice())
 }

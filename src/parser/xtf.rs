@@ -282,7 +282,7 @@ where
 
     /// Return a reference to the FileHeader
     pub fn header(&self) -> &FileHeader {
-	&self.header
+        &self.header
     }
 }
 
