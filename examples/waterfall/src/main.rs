@@ -22,6 +22,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port_data: Vec<f32> = port_data.into_iter().flatten().collect();
     let starboard_data: Vec<f32> = starboard_data.into_iter().flatten().collect();
 
-    pollster::block_on(waterfall::run(port_data,starboard_data));
+    pollster::block_on(waterfall::run(port_data, starboard_data));
     Ok(())
 }
