@@ -364,8 +364,12 @@ impl State {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+
+	    // Draw and texture the port quad
             render_pass.set_bind_group(0, &self.port_bind_group, &[]);
             render_pass.draw_indexed(0..self.num_indices, 0, 1..2);
+
+	    // Draw and texture the starboard quad
             render_pass.set_bind_group(0, &self.starboard_bind_group, &[]);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
         }
