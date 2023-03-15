@@ -313,45 +313,8 @@ impl State {
         let data1 = &self.port_data[(self.idx * 4340)..((self.idx + 1024) * 4340)];
         let data2 = &self.starboard_data[(self.idx * 4340)..((self.idx + 1024) * 4340)];
 
-        self.context.queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &self.port_texture.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            bytemuck::cast_slice(data1),
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: std::num::NonZeroU32::new(4 * 4340),
-                rows_per_image: std::num::NonZeroU32::new(1024),
-            },
-            wgpu::Extent3d {
-                width: 4340,
-                height: 1024,
-                depth_or_array_layers: 1,
-            },
-        );
-
-        self.context.queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &self.starboard_texture.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            bytemuck::cast_slice(data2),
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: std::num::NonZeroU32::new(4 * 4340),
-                rows_per_image: std::num::NonZeroU32::new(1024),
-            },
-            wgpu::Extent3d {
-                width: 4340,
-                height: 1024,
-                depth_or_array_layers: 1,
-            },
-        );
+        self.port_texture.update(&self.context,data1);
+	self.starboard_texture.update(&self.context,data2);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
