@@ -22,12 +22,14 @@ impl Vertex {
             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &[
-                wgpu::VertexAttribute { // position
+                wgpu::VertexAttribute {
+                    // position
                     offset: 0,
                     shader_location: 0,
                     format: wgpu::VertexFormat::Float32x3,
                 },
-                wgpu::VertexAttribute { // tex_coords
+                wgpu::VertexAttribute {
+                    // tex_coords
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
@@ -73,10 +75,17 @@ struct State {
     idx: usize,
     port_data: Vec<f32>,
     starboard_data: Vec<f32>,
+    row_max: usize
 }
 
 impl State {
-    async fn new(window: Window, port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usize) -> Self {
+    async fn new(
+        window: Window,
+        port_data: Vec<f32>,
+        starboard_data: Vec<f32>,
+        padded_len: usize,
+        row_max: usize,
+    ) -> Self {
         let context = context::Context::new(window).await;
 
         let size = context.window().inner_size();
@@ -103,15 +112,18 @@ impl State {
 
         context.surface.configure(&context.device, &config);
 
-        let dimensions: (u32,u32) = (padded_len as u32, 1024);
+        let dimensions: (u32, u32) = (padded_len as u32, 1024);
 
         let idx: usize = 0;
-        let data1 = &port_data[(idx * dimensions.0 as usize)..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
-        let data2 = &starboard_data[(idx * dimensions.0 as usize)..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
+        let data1 = &port_data[(idx * dimensions.0 as usize)
+            ..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
+        let data2 = &starboard_data[(idx * dimensions.0 as usize)
+            ..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
 
-	let port_texture = texture::Texture::from_data(&context, data1, dimensions,Some("Port texture"));
-	let starboard_texture = texture::Texture::from_data(&context, data2, dimensions,Some("Starboard texture"));
-
+        let port_texture =
+            texture::Texture::from_data(&context, data1, dimensions, Some("Port texture"));
+        let starboard_texture =
+            texture::Texture::from_data(&context, data2, dimensions, Some("Starboard texture"));
 
         let texture_bind_group_layout =
             context
@@ -259,6 +271,7 @@ impl State {
             idx,
             port_data,
             starboard_data,
+	    row_max
         }
     }
 
@@ -288,7 +301,9 @@ impl State {
                     },
                 ..
             } => {
-                self.idx += 1;
+		if self.idx < self.row_max - 1024 - 10 {
+		    self.idx += 10;
+		}                
                 true
             }
             WindowEvent::KeyboardInput {
@@ -301,7 +316,7 @@ impl State {
                 ..
             } => {
                 if self.idx > 0 {
-                    self.idx -= 1;
+                    self.idx -= 10;
                 }
                 true
             }
@@ -313,8 +328,8 @@ impl State {
         let data1 = &self.port_data[(self.idx * 4352)..((self.idx + 1024) * 4352)];
         let data2 = &self.starboard_data[(self.idx * 4352)..((self.idx + 1024) * 4352)];
 
-        self.port_texture.update(&self.context,data1);
-	self.starboard_texture.update(&self.context,data2);
+        self.port_texture.update(&self.context, data1);
+        self.starboard_texture.update(&self.context, data2);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -365,51 +380,56 @@ impl State {
     }
 }
 
-pub async fn run(port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usize) {
+pub async fn run(port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usize, row_max: usize) {
     env_logger::init();
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let mut state = State::new(window, port_data, starboard_data, padded_len).await;
+    let mut state = State::new(window, port_data, starboard_data, padded_len, row_max).await;
 
-    event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent {
-            ref event,
-            window_id,
-        } if window_id == state.context.window().id() => {
-            if !state.input(event) {
-                match event {
-                    WindowEvent::CloseRequested
-                    | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => control_flow.set_exit(),
-                    WindowEvent::Resized(physical_size) => state.resize(*physical_size),
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        state.resize(**new_inner_size)
+    event_loop.run(move |event, _, control_flow| {
+        control_flow.set_wait();
+        match event {
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } if window_id == state.context.window().id() => {
+                if !state.input(event) {
+                    match event {
+                        WindowEvent::CloseRequested
+                        | WindowEvent::KeyboardInput {
+                            input:
+                                KeyboardInput {
+                                    state: ElementState::Pressed,
+                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                                    ..
+                                },
+                            ..
+                        } => control_flow.set_exit(),
+                        WindowEvent::Resized(physical_size) => state.resize(*physical_size),
+                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                            state.resize(**new_inner_size)
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
-        }
-        Event::RedrawRequested(window_id) if window_id == state.context.window().id() => {
-            state.update();
-            match state.render() {
-                Ok(_) => {}
-                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                Err(wgpu::SurfaceError::OutOfMemory) => control_flow.set_exit(),
-                Err(e) => eprintln!("{:?}", e),
+            Event::RedrawRequested(window_id) if window_id == state.context.window().id() => {
+                let start_time = std::time::Instant::now();
+                state.update();
+                match state.render() {
+                    Ok(_) => {}
+                    Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                    Err(wgpu::SurfaceError::OutOfMemory) => control_flow.set_exit(),
+                    Err(e) => eprintln!("{:?}", e),
+                }
+                log::debug!("Rendering took {:?}", start_time.elapsed())
             }
+            Event::MainEventsCleared => {
+                state.window().request_redraw();
+            }
+            _ => {}
         }
-        Event::MainEventsCleared => {
-            state.window().request_redraw();
-        }
-        _ => {}
     })
 }

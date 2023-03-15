@@ -1,34 +1,39 @@
-use crate::{context::Context};
+use crate::context::Context;
 
 pub struct Texture {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
-    dimensions: (u32,u32)
+    dimensions: (u32, u32),
 }
 
 impl Texture {
-    pub fn from_data(context: &Context, data: &[f32], dimensions: (u32,u32),label: Option<&str>) -> Self {
-	let size = wgpu::Extent3d {
-	    width: dimensions.0,
-	    height: dimensions.1,
-	    depth_or_array_layers: 1
-	};
+    pub fn from_data(
+        context: &Context,
+        data: &[f32],
+        dimensions: (u32, u32),
+        label: Option<&str>,
+    ) -> Self {
+        let size = wgpu::Extent3d {
+            width: dimensions.0,
+            height: dimensions.1,
+            depth_or_array_layers: 1,
+        };
 
-	let texture = context.device.create_texture(&wgpu::TextureDescriptor {
-	    label,
-	    size,
-	    mip_level_count: 1,
-	    sample_count: 1,
-	    dimension: wgpu::TextureDimension::D2,
-	    format: wgpu::TextureFormat::R32Float,
-	    usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-	    view_formats: &[],
-	});
+        let texture = context.device.create_texture(&wgpu::TextureDescriptor {
+            label,
+            size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::R32Float,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
 
-	let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-	let sampler = context.device.create_sampler(&wgpu::SamplerDescriptor {
+        let sampler = context.device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::ClampToEdge,
             address_mode_v: wgpu::AddressMode::ClampToEdge,
             address_mode_w: wgpu::AddressMode::ClampToEdge,
@@ -38,7 +43,7 @@ impl Texture {
             ..Default::default()
         });
 
-	context.queue.write_texture(
+        context.queue.write_texture(
             wgpu::ImageCopyTexture {
                 texture: &texture,
                 mip_level: 0,
@@ -54,16 +59,16 @@ impl Texture {
             size,
         );
 
-	Self {
-	    texture,
-	    view,
-	    sampler,
-	    dimensions
-	}
+        Self {
+            texture,
+            view,
+            sampler,
+            dimensions,
+        }
     }
 
-    pub fn update(&self,context: &Context, new_data: &[f32]) {
-	context.queue.write_texture(
+    pub fn update(&self, context: &Context, new_data: &[f32]) {
+        context.queue.write_texture(
             wgpu::ImageCopyTexture {
                 texture: &self.texture,
                 mip_level: 0,
