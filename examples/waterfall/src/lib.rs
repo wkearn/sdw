@@ -114,16 +114,10 @@ impl State {
 
         let dimensions: (u32, u32) = (padded_len as u32, 1024);
 
-        let idx: usize = 0;
-        let data1 = &port_data[(idx * dimensions.0 as usize)
-            ..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
-        let data2 = &starboard_data[(idx * dimensions.0 as usize)
-            ..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
-
         let port_texture =
-            texture::Texture::from_data(&context, data1, dimensions, Some("Port texture"));
+            texture::Texture::new(&context, dimensions, Some("Port texture"));
         let starboard_texture =
-            texture::Texture::from_data(&context, data2, dimensions, Some("Starboard texture"));
+            texture::Texture::new(&context, dimensions, Some("Starboard texture"));
 
         let texture_bind_group_layout =
             context
@@ -268,7 +262,7 @@ impl State {
             port_bind_group,
             starboard_texture,
             starboard_bind_group,
-            idx,
+            idx: 0,
             port_data,
             starboard_data,
 	    row_max

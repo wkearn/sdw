@@ -8,9 +8,8 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn from_data(
+    pub fn new(
         context: &Context,
-        data: &[f32],
         dimensions: (u32, u32),
         label: Option<&str>,
     ) -> Self {
@@ -42,22 +41,6 @@ impl Texture {
             mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
-
-        context.queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            bytemuck::cast_slice(data),
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: std::num::NonZeroU32::new(4 * dimensions.0),
-                rows_per_image: std::num::NonZeroU32::new(dimensions.1),
-            },
-            size,
-        );
 
         Self {
             texture,
