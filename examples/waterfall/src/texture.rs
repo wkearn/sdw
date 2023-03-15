@@ -8,11 +8,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(
-        context: &Context,
-        dimensions: (u32, u32),
-        label: Option<&str>,
-    ) -> Self {
+    pub fn new(context: &Context, dimensions: (u32, u32), label: Option<&str>) -> Self {
         let size = wgpu::Extent3d {
             width: dimensions.0,
             height: dimensions.1,
@@ -72,7 +68,7 @@ impl Texture {
         );
     }
 
-    pub fn dimensions(&self) -> &(u32,u32) {
-	&self.dimensions
+    pub fn dimensions(&self) -> &(u32, u32) {
+        &self.dimensions
     }
 }

@@ -75,7 +75,7 @@ struct State {
     idx: usize,
     port_data: Vec<f32>,
     starboard_data: Vec<f32>,
-    row_max: usize
+    row_max: usize,
 }
 
 impl State {
@@ -114,8 +114,7 @@ impl State {
 
         let dimensions: (u32, u32) = (padded_len as u32, 1024);
 
-        let port_texture =
-            texture::Texture::new(&context, dimensions, Some("Port texture"));
+        let port_texture = texture::Texture::new(&context, dimensions, Some("Port texture"));
         let starboard_texture =
             texture::Texture::new(&context, dimensions, Some("Starboard texture"));
 
@@ -265,7 +264,7 @@ impl State {
             idx: 0,
             port_data,
             starboard_data,
-	    row_max
+            row_max,
         }
     }
 
@@ -295,9 +294,9 @@ impl State {
                     },
                 ..
             } => {
-		if self.idx < self.row_max - 1024 - 10 {
-		    self.idx += 10;
-		}                
+                if self.idx < self.row_max - 1024 - 10 {
+                    self.idx += 10;
+                }
                 true
             }
             WindowEvent::KeyboardInput {
@@ -319,11 +318,13 @@ impl State {
     }
 
     fn update(&mut self) {
-	let dims = self.port_texture.dimensions();
-        let data1 = &self.port_data[(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
+        let dims = self.port_texture.dimensions();
+        let data1 = &self.port_data
+            [(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
 
-	let dims = self.starboard_texture.dimensions();
-        let data2 = &self.starboard_data[(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
+        let dims = self.starboard_texture.dimensions();
+        let data2 = &self.starboard_data
+            [(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
 
         self.port_texture.update(&self.context, data1);
         self.starboard_texture.update(&self.context, data2);
@@ -365,11 +366,11 @@ impl State {
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-	    // Draw and texture the port quad
+            // Draw and texture the port quad
             render_pass.set_bind_group(0, &self.port_bind_group, &[]);
             render_pass.draw_indexed(0..self.num_indices, 0, 1..2);
 
-	    // Draw and texture the starboard quad
+            // Draw and texture the starboard quad
             render_pass.set_bind_group(0, &self.starboard_bind_group, &[]);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
         }
