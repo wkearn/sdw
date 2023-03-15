@@ -74,7 +74,9 @@ struct State {
     starboard_bind_group: wgpu::BindGroup,
     idx: usize,
     port_data: Vec<f32>,
+    port_data_buffer: wgpu::Buffer,
     starboard_data: Vec<f32>,
+    starboard_data_buffer: wgpu::Buffer,
     row_max: usize,
 }
 
@@ -114,6 +116,26 @@ impl State {
 
         let dimensions: (u32, u32) = (padded_len as u32, 1024);
 
+	// Create data buffers
+
+	let data_buffer_size = (dimensions.0 as usize * dimensions.1 as usize * std::mem::size_of::<f32>()) as wgpu::BufferAddress;
+
+	let port_data_buffer = context.device.create_buffer(&wgpu::BufferDescriptor {
+	    label: Some("Port data buffer"),
+	    size: data_buffer_size,
+	    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::COPY_SRC,
+	    mapped_at_creation: false
+	});
+
+	let starboard_data_buffer = context.device.create_buffer(&wgpu::BufferDescriptor {
+	    label: Some("Starboard data buffer"),
+	    size: data_buffer_size,
+	    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::COPY_SRC,
+	    mapped_at_creation: false
+	});
+
+	// Create texture
+	
         let port_texture = texture::Texture::new(&context, dimensions, Some("Port texture"));
         let starboard_texture =
             texture::Texture::new(&context, dimensions, Some("Starboard texture"));
@@ -263,7 +285,9 @@ impl State {
             starboard_bind_group,
             idx: 0,
             port_data,
+	    port_data_buffer,
             starboard_data,
+	    starboard_data_buffer,
             row_max,
         }
     }
@@ -326,8 +350,8 @@ impl State {
         let data2 = &self.starboard_data
             [(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
 
-        self.port_texture.update(&self.context, data1);
-        self.starboard_texture.update(&self.context, data2);
+	self.context.queue.write_buffer(&self.port_data_buffer,0,bytemuck::cast_slice(data1));
+	self.context.queue.write_buffer(&self.starboard_data_buffer,0,bytemuck::cast_slice(data2));
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -343,6 +367,51 @@ impl State {
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                     label: Some("Render encoder"),
                 });
+
+	// Copy data from the buffers into the textures
+	encoder.copy_buffer_to_texture(
+	    wgpu::ImageCopyBuffer {
+		buffer: &self.port_data_buffer,
+		layout: wgpu::ImageDataLayout {
+		    offset: 0,
+		    bytes_per_row: std::num::NonZeroU32::new(4*self.port_texture.dimensions().0),
+		    rows_per_image: std::num::NonZeroU32::new(self.port_texture.dimensions().1)
+		}
+	    },
+	    wgpu::ImageCopyTexture {
+		texture: &self.port_texture.texture,
+		mip_level: 0,
+		origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+	    },
+	    wgpu::Extent3d {
+                width: self.port_texture.dimensions().0,
+                height: self.port_texture.dimensions().1,
+                depth_or_array_layers: 1,
+            },
+	);
+
+		encoder.copy_buffer_to_texture(
+	    wgpu::ImageCopyBuffer {
+		buffer: &self.starboard_data_buffer,
+		layout: wgpu::ImageDataLayout {
+		    offset: 0,
+		    bytes_per_row: std::num::NonZeroU32::new(4*self.starboard_texture.dimensions().0),
+		    rows_per_image: std::num::NonZeroU32::new(self.starboard_texture.dimensions().1)
+		}
+	    },
+	    wgpu::ImageCopyTexture {
+		texture: &self.starboard_texture.texture,
+		mip_level: 0,
+		origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+	    },
+	    wgpu::Extent3d {
+                width: self.starboard_texture.dimensions().0,
+                height: self.starboard_texture.dimensions().1,
+                depth_or_array_layers: 1,
+            },
+	);
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
