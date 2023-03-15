@@ -19,9 +19,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .tuples::<(_, _)>()
         .unzip();
 
-    let port_data: Vec<f32> = port_data.into_iter().flatten().collect();
-    let starboard_data: Vec<f32> = starboard_data.into_iter().flatten().collect();
+    let data_len = port_data[0].len();
+    let padding = vec![0.0f32;256 - (data_len % 256)];
 
-    pollster::block_on(waterfall::run(port_data, starboard_data));
+    let padded_len = data_len + padding.len();
+        
+    let port_data: Vec<f32> = port_data.into_iter().flat_map(|x| x.into_iter().chain(padding.clone())).collect();
+    let starboard_data: Vec<f32> = starboard_data.into_iter().flat_map(|x| x.into_iter().chain(padding.clone())).collect();
+
+    pollster::block_on(waterfall::run(port_data, starboard_data, padded_len));
     Ok(())
 }

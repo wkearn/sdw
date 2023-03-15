@@ -22,12 +22,12 @@ impl Vertex {
             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &[
-                wgpu::VertexAttribute {
+                wgpu::VertexAttribute { // position
                     offset: 0,
                     shader_location: 0,
                     format: wgpu::VertexFormat::Float32x3,
                 },
-                wgpu::VertexAttribute {
+                wgpu::VertexAttribute { // tex_coords
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
@@ -76,7 +76,7 @@ struct State {
 }
 
 impl State {
-    async fn new(window: Window, port_data: Vec<f32>, starboard_data: Vec<f32>) -> Self {
+    async fn new(window: Window, port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usize) -> Self {
         let context = context::Context::new(window).await;
 
         let size = context.window().inner_size();
@@ -103,11 +103,11 @@ impl State {
 
         context.surface.configure(&context.device, &config);
 
-        let dimensions = (4340, 1024);
+        let dimensions: (u32,u32) = (padded_len as u32, 1024);
 
         let idx: usize = 0;
-        let data1 = &port_data[(idx * 4340)..((idx + 1024) * 4340)];
-        let data2 = &starboard_data[(idx * 4340)..((idx + 1024) * 4340)];
+        let data1 = &port_data[(idx * dimensions.0 as usize)..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
+        let data2 = &starboard_data[(idx * dimensions.0 as usize)..((idx + dimensions.1 as usize) * dimensions.0 as usize)];
 
 	let port_texture = texture::Texture::from_data(&context, data1, dimensions,Some("Port texture"));
 	let starboard_texture = texture::Texture::from_data(&context, data2, dimensions,Some("Starboard texture"));
@@ -310,8 +310,8 @@ impl State {
     }
 
     fn update(&mut self) {
-        let data1 = &self.port_data[(self.idx * 4340)..((self.idx + 1024) * 4340)];
-        let data2 = &self.starboard_data[(self.idx * 4340)..((self.idx + 1024) * 4340)];
+        let data1 = &self.port_data[(self.idx * 4352)..((self.idx + 1024) * 4352)];
+        let data2 = &self.starboard_data[(self.idx * 4352)..((self.idx + 1024) * 4352)];
 
         self.port_texture.update(&self.context,data1);
 	self.starboard_texture.update(&self.context,data2);
@@ -365,13 +365,13 @@ impl State {
     }
 }
 
-pub async fn run(port_data: Vec<f32>, starboard_data: Vec<f32>) {
+pub async fn run(port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usize) {
     env_logger::init();
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let mut state = State::new(window, port_data, starboard_data).await;
+    let mut state = State::new(window, port_data, starboard_data, padded_len).await;
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
