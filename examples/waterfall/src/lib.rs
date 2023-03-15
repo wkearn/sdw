@@ -6,6 +6,7 @@ use winit::{
 
 use wgpu::util::DeviceExt;
 
+pub mod compute;
 pub mod context;
 pub mod texture;
 
