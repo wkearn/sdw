@@ -319,8 +319,11 @@ impl State {
     }
 
     fn update(&mut self) {
-        let data1 = &self.port_data[(self.idx * 4352)..((self.idx + 1024) * 4352)];
-        let data2 = &self.starboard_data[(self.idx * 4352)..((self.idx + 1024) * 4352)];
+	let dims = self.port_texture.dimensions();
+        let data1 = &self.port_data[(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
+
+	let dims = self.starboard_texture.dimensions();
+        let data2 = &self.starboard_data[(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
 
         self.port_texture.update(&self.context, data1);
         self.starboard_texture.update(&self.context, data2);

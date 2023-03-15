@@ -71,4 +71,8 @@ impl Texture {
             },
         );
     }
+
+    pub fn dimensions(&self) -> &(u32,u32) {
+	&self.dimensions
+    }
 }
