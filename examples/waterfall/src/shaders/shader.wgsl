@@ -1,26 +1,40 @@
-struct VertexInput {
-  @location(0) position: vec3<f32>,
-  @location(1) tex_coords: vec2<f32>
-};
-
 struct VertexOutput {
   @builtin(position) clip_position: vec4<f32>,
   @location(0) tex_coords: vec2<f32>,
 }
 
 @vertex
-fn vs_main(model: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {
+fn vs_main(@builtin(vertex_index) idx: u32,
+	   @builtin(instance_index) instance: u32) -> VertexOutput {
   var out: VertexOutput;
+
+  var vertex = vec2(0.0, 1.0);
+  var tex_coords = vec2(0.0,1.0);
+  switch idx {
+      case 1u: {
+	vertex = vec2(0.0, -1.0);
+	tex_coords = vec2(0.0,0.0);
+      }
+      case 2u, 4u: {
+	vertex = vec2(1.0, -1.0);
+	tex_coords = vec2(1.0,0.0);
+      }
+      case 5u: {
+	vertex = vec2(1.0, 1.0);
+	tex_coords = vec2(1.0,1.0);
+      }
+	default: {}
+    }
   
   if instance == 0u {
       // Starboard instance
-      out.tex_coords = model.tex_coords;
-      out.clip_position = vec4<f32>(model.position,1.0);
+      out.tex_coords = tex_coords;
+      out.clip_position = vec4<f32>(vertex,0.0,1.0);
     }
   else {
     // Port instance
-    out.tex_coords = vec2<f32>(1.0 - model.tex_coords.x,model.tex_coords.y);
-    out.clip_position = vec4<f32>(model.position - vec3<f32>(1.0,0.0,0.0),1.0);
+    out.tex_coords = vec2<f32>(1.0 - tex_coords.x,tex_coords.y);
+    out.clip_position = vec4<f32>(vertex - vec2<f32>(1.0,0.0),0.0,1.0);
   }
 
   return out;

@@ -285,7 +285,7 @@ impl State {
                     vertex: wgpu::VertexState {
                         module: &shader,
                         entry_point: "vs_main",
-                        buffers: &[Vertex::desc()],
+                        buffers: &[],
                     },
                     fragment: Some(wgpu::FragmentState {
                         module: &shader,
@@ -530,12 +530,13 @@ impl State {
                     label: Some("Render encoder"),
                 });
 
-        //self.port_data_buffer.copy_buffer_to_texture(&mut encoder, &self.port_texture);
+        self.port_data_buffer.copy_buffer_to_texture(&mut encoder, &self.port_texture);
         self.starboard_data_buffer
             .copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
 
         // Run compute shaders here
 
+	/*
 	// Reduce the sonar data
         self.reduce_shader.dispatch(
             &self.reduce_bind_group,
@@ -580,7 +581,7 @@ impl State {
                 depth_or_array_layers: 1,
             },
         );
-
+	 */
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render pass"),
@@ -595,16 +596,14 @@ impl State {
                 depth_stencil_attachment: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-            // Draw and texture the port quad
+	    // Draw and texture the port quad
             render_pass.set_bind_group(0, &self.port_bind_group, &[]);
-            render_pass.draw_indexed(0..self.num_indices, 0, 1..2);
+            render_pass.draw(0..6,1..2);
 
             // Draw and texture the starboard quad
             render_pass.set_bind_group(0, &self.starboard_bind_group, &[]);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            render_pass.draw(0..6, 0..1);
         }
 
         self.context.queue.submit(std::iter::once(encoder.finish()));
