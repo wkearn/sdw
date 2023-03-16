@@ -42,10 +42,8 @@ impl ComputeShader {
 
     pub fn dispatch(
         &self,
-	bind_group: &wgpu::BindGroup,
-        context: &Context,
+        bind_group: &wgpu::BindGroup,
         encoder: &mut wgpu::CommandEncoder,
-        bindings: &[wgpu::BindGroupEntry],
         workgroups: WorkgroupSize,
     ) {
         // This requires you to be smart about the bindings you pass in.
@@ -54,5 +52,9 @@ impl ComputeShader {
         cpass.set_pipeline(&self.pipeline);
         cpass.set_bind_group(0, &bind_group, &[]);
         cpass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
+    }
+
+    pub fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.bind_group_layout
     }
 }

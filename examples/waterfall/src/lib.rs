@@ -89,8 +89,12 @@ impl SonarDataBuffer {
         }
     }
 
-    fn copy_buffer_to_texture(&self,encoder: &mut wgpu::CommandEncoder, texture: &texture::Texture) {
-	encoder.copy_buffer_to_texture(
+    fn copy_buffer_to_texture(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        texture: &texture::Texture,
+    ) {
+        encoder.copy_buffer_to_texture(
             wgpu::ImageCopyBuffer {
                 buffer: &self.buffer,
                 layout: wgpu::ImageDataLayout {
@@ -114,15 +118,13 @@ impl SonarDataBuffer {
     }
 
     fn update_buffer_from_idx(&mut self, context: &context::Context, idx: usize) {
-	let dims = self.dimensions;
-        let new_data = &self.data
-            [(idx * dims.0 as usize)..((idx + dims.1 as usize) * dims.0 as usize)];
+        let dims = self.dimensions;
+        let new_data =
+            &self.data[(idx * dims.0 as usize)..((idx + dims.1 as usize) * dims.0 as usize)];
 
-	context.queue.write_buffer(
-            &self.buffer,
-            0,
-            bytemuck::cast_slice(new_data),
-        );
+        context
+            .queue
+            .write_buffer(&self.buffer, 0, bytemuck::cast_slice(new_data));
     }
 }
 
@@ -142,6 +144,16 @@ struct State {
     port_data_buffer: SonarDataBuffer,
     starboard_data_buffer: SonarDataBuffer,
     row_max: usize,
+    reduce_shader: compute::ComputeShader,
+    num_blocks: u32,
+    reduce_output_buffer: wgpu::Buffer,
+    reduce_block_sums_buffer: wgpu::Buffer,
+    reduce_bind_group: wgpu::BindGroup,
+    block_increment_shader: compute::ComputeShader,
+    block_increment_bind_group: wgpu::BindGroup,
+    downsweep_shader: compute::ComputeShader,
+    downsweep_output_buffer: wgpu::Buffer,
+    downsweep_bind_group: wgpu::BindGroup,
 }
 
 impl State {
@@ -252,7 +264,7 @@ impl State {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(include_str!("shaders/shader.wgsl").into()),
             });
 
         let render_pipeline_layout =
@@ -320,6 +332,105 @@ impl State {
 
         let num_indices = INDICES.len() as u32;
 
+        // Create the reduce shader
+        let reduce_shader =
+            compute::ComputeShader::new(&context, include_str!("shaders/reduce.wgsl"));
+
+        // Number of blocks
+        let num_blocks = dimensions.0 / 256;
+
+        let output_buffer_size = ((dimensions.0 * dimensions.1) as usize
+            * std::mem::size_of::<f32>()) as wgpu::BufferAddress;
+        let block_sum_size = ((num_blocks * dimensions.1) as usize * std::mem::size_of::<f32>())
+            as wgpu::BufferAddress;
+
+        let reduce_output_buffer = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Reduce output buffer"),
+            size: output_buffer_size,
+            usage: wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_DST
+                | wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        });
+
+        let reduce_block_sums_buffer = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Reduce block sums buffer"),
+            size: block_sum_size,
+            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        });
+
+        let reduce_bind_group = context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &reduce_shader.bind_group_layout(),
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: port_data_buffer.buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: reduce_output_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: reduce_block_sums_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+
+        // Create the block increment shader
+        let block_increment_shader =
+            compute::ComputeShader::new(&context, include_str!("shaders/block_increment.wgsl"));
+
+        let block_increment_bind_group =
+            context
+                .device
+                .create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: None,
+                    layout: &block_increment_shader.bind_group_layout(),
+                    entries: &[wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: reduce_block_sums_buffer.as_entire_binding(),
+                    }],
+                });
+
+        // Create the downsweep shader
+        let downsweep_shader =
+            compute::ComputeShader::new(&context, include_str!("shaders/downsweep.wgsl"));
+
+        let downsweep_output_buffer = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Downsweep output buffer"),
+            size: output_buffer_size,
+            usage: wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_DST
+                | wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        });
+
+        let downsweep_bind_group = context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &downsweep_shader.bind_group_layout(),
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: reduce_output_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: downsweep_output_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: reduce_block_sums_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+
         Self {
             context,
             config,
@@ -336,6 +447,16 @@ impl State {
             port_data_buffer,
             starboard_data_buffer,
             row_max,
+            reduce_shader,
+            num_blocks,
+            reduce_output_buffer,
+            reduce_block_sums_buffer,
+            reduce_bind_group,
+            block_increment_shader,
+            block_increment_bind_group,
+            downsweep_shader,
+            downsweep_output_buffer,
+            downsweep_bind_group,
         }
     }
 
@@ -389,8 +510,10 @@ impl State {
     }
 
     fn update(&mut self) {
-	self.port_data_buffer.update_buffer_from_idx(&self.context, self.idx);
-	self.starboard_data_buffer.update_buffer_from_idx(&self.context, self.idx);
+        self.port_data_buffer
+            .update_buffer_from_idx(&self.context, self.idx);
+        self.starboard_data_buffer
+            .update_buffer_from_idx(&self.context, self.idx);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -407,10 +530,56 @@ impl State {
                     label: Some("Render encoder"),
                 });
 
-	self.port_data_buffer.copy_buffer_to_texture(&mut encoder, &self.port_texture);
-	self.starboard_data_buffer.copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
+        //self.port_data_buffer.copy_buffer_to_texture(&mut encoder, &self.port_texture);
+        self.starboard_data_buffer
+            .copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
 
-	// Run compute shaders here
+        // Run compute shaders here
+
+	// Reduce the sonar data
+        self.reduce_shader.dispatch(
+            &self.reduce_bind_group,
+            &mut encoder,
+            (self.num_blocks, self.port_data_buffer.dimensions.1, 1),
+        );
+
+        // Reduce the block sums
+        self.block_increment_shader.dispatch(
+            &self.block_increment_bind_group,
+            &mut encoder,
+            (1, self.port_data_buffer.dimensions.1, 1),
+        );
+
+        // Downsweep
+        self.downsweep_shader.dispatch(
+            &self.downsweep_bind_group,
+            &mut encoder,
+            (self.num_blocks, self.port_data_buffer.dimensions.1, 1),
+        );
+
+        // Copy the downsweep output buffer into the port texture for testing
+
+        encoder.copy_buffer_to_texture(
+            wgpu::ImageCopyBuffer {
+                buffer: &self.downsweep_output_buffer,
+                layout: wgpu::ImageDataLayout {
+                    offset: 0,
+                    bytes_per_row: std::num::NonZeroU32::new(4 * self.port_texture.dimensions().0),
+                    rows_per_image: std::num::NonZeroU32::new(self.port_texture.dimensions().1),
+                },
+            },
+            wgpu::ImageCopyTexture {
+                texture: &self.port_texture.texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            wgpu::Extent3d {
+                width: self.port_texture.dimensions().0,
+                height: self.port_texture.dimensions().1,
+                depth_or_array_layers: 1,
+            },
+        );
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
