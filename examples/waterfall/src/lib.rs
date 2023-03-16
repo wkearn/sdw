@@ -112,6 +112,18 @@ impl SonarDataBuffer {
             },
         );
     }
+
+    fn update_buffer_from_idx(&mut self, context: &context::Context, idx: usize) {
+	let dims = self.dimensions;
+        let new_data = &self.data
+            [(idx * dims.0 as usize)..((idx + dims.1 as usize) * dims.0 as usize)];
+
+	context.queue.write_buffer(
+            &self.buffer,
+            0,
+            bytemuck::cast_slice(new_data),
+        );
+    }
 }
 
 struct State {
@@ -377,24 +389,8 @@ impl State {
     }
 
     fn update(&mut self) {
-        let dims = self.port_data_buffer.dimensions;
-        let data1 = &self.port_data_buffer.data
-            [(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
-
-        let dims = self.starboard_data_buffer.dimensions;
-        let data2 = &self.starboard_data_buffer.data
-            [(self.idx * dims.0 as usize)..((self.idx + dims.1 as usize) * dims.0 as usize)];
-
-        self.context.queue.write_buffer(
-            &self.port_data_buffer.buffer,
-            0,
-            bytemuck::cast_slice(data1),
-        );
-        self.context.queue.write_buffer(
-            &self.starboard_data_buffer.buffer,
-            0,
-            bytemuck::cast_slice(data2),
-        );
+	self.port_data_buffer.update_buffer_from_idx(&self.context, self.idx);
+	self.starboard_data_buffer.update_buffer_from_idx(&self.context, self.idx);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
