@@ -82,9 +82,6 @@ struct State {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    num_indices: u32,
     port_texture: texture::Texture,
     port_bind_group: wgpu::BindGroup,
     starboard_texture: texture::Texture,
@@ -263,24 +260,6 @@ impl State {
                     multiview: None,
                 });
 
-        let vertex_buffer = context
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-
-        let index_buffer = context
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index buffer"),
-                contents: bytemuck::cast_slice(INDICES),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-
-        let num_indices = INDICES.len() as u32;
-
         // Create the reduce shader
         let reduce_shader =
             compute::ComputeShader::new(&context, include_str!("shaders/reduce.wgsl"));
@@ -385,9 +364,6 @@ impl State {
             config,
             size,
             render_pipeline,
-            vertex_buffer,
-            index_buffer,
-            num_indices,
             port_texture,
             port_bind_group,
             starboard_texture,
