@@ -42,19 +42,13 @@ impl ComputeShader {
 
     pub fn dispatch(
         &self,
+	bind_group: &wgpu::BindGroup,
         context: &Context,
         encoder: &mut wgpu::CommandEncoder,
         bindings: &[wgpu::BindGroupEntry],
         workgroups: WorkgroupSize,
     ) {
         // This requires you to be smart about the bindings you pass in.
-        let bind_group = context
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                label: None,
-                layout: &self.bind_group_layout,
-                entries: bindings,
-            });
 
         let mut cpass = encoder.begin_compute_pass(&Default::default());
         cpass.set_pipeline(&self.pipeline);
