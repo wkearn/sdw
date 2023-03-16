@@ -410,7 +410,6 @@ impl State {
 	self.port_data_buffer.copy_buffer_to_texture(&mut encoder, &self.port_texture);
 	self.starboard_data_buffer.copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
 
-
 	// Run compute shaders here
 
         {
@@ -420,12 +419,7 @@ impl State {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
-                            a: 1.0,
-                        }),
+                        load: wgpu::LoadOp::Clear(wgpu::Color::default()),
                         store: true,
                     },
                 })],
