@@ -411,7 +411,7 @@ impl State {
 	self.starboard_data_buffer.copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
 
 
-	// Run compute shader here
+	// Run compute shaders here
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
