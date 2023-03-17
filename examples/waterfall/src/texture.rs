@@ -5,14 +5,15 @@ pub struct Texture {
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
     dimensions: (u32, u32),
+    layers: u32
 }
 
 impl Texture {
-    pub fn new(context: &Context, dimensions: (u32, u32), label: Option<&str>) -> Self {
+    pub fn new(context: &Context, dimensions: (u32, u32), layers: u32, label: Option<&str>) -> Self {
         let size = wgpu::Extent3d {
             width: dimensions.0,
             height: dimensions.1,
-            depth_or_array_layers: 1,
+            depth_or_array_layers: layers,
         };
 
         let texture = context.device.create_texture(&wgpu::TextureDescriptor {
@@ -43,32 +44,15 @@ impl Texture {
             view,
             sampler,
             dimensions,
+	    layers
         }
-    }
-
-    pub fn update(&self, context: &Context, new_data: &[f32]) {
-        context.queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &self.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            bytemuck::cast_slice(new_data),
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: std::num::NonZeroU32::new(4 * self.dimensions.0),
-                rows_per_image: std::num::NonZeroU32::new(self.dimensions.1),
-            },
-            wgpu::Extent3d {
-                width: self.dimensions.0,
-                height: self.dimensions.1,
-                depth_or_array_layers: 1,
-            },
-        );
     }
 
     pub fn dimensions(&self) -> &(u32, u32) {
         &self.dimensions
+    }
+
+    pub fn layers(&self) -> &u32 {
+	&self.layers
     }
 }

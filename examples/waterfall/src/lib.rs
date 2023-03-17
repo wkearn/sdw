@@ -143,9 +143,9 @@ impl State {
         let starboard_data_buffer = SonarDataBuffer::new(&context, starboard_data, dimensions);
 
         // Create texture
-        let port_texture = texture::Texture::new(&context, dimensions, Some("Port texture"));
+        let port_texture = texture::Texture::new(&context, dimensions, 2, Some("Port texture"));
         let starboard_texture =
-            texture::Texture::new(&context, dimensions, Some("Starboard texture"));
+            texture::Texture::new(&context, dimensions, 2, Some("Starboard texture"));
 
         let texture_bind_group_layout =
             context
@@ -157,7 +157,7 @@ impl State {
                             visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 multisampled: false,
-                                view_dimension: wgpu::TextureViewDimension::D2,
+                                view_dimension: wgpu::TextureViewDimension::D2Array,
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                             },
                             count: None,
