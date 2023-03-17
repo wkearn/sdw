@@ -18,19 +18,19 @@ fn vs_main(@builtin(vertex_index) idx: u32,
   let a = viewport.viewport.y;
   
   var vertex = vec2(0.0, 1.0);
-  var tex_coords = vec2(0.0,6.0 + a);
+  var tex_coords = vec2(0.0,4.0 + a);
   switch idx {
       case 1u: {
 	vertex = vec2(0.0, -1.0);
-	tex_coords = vec2(0.0,2.0 + a);
+	tex_coords = vec2(0.0,0.0 + a);
       }
       case 2u, 4u: {
 	vertex = vec2(1.0, -1.0);
-	tex_coords = vec2(1.0,2.0 + a);
+	tex_coords = vec2(1.0,0.0 + a);
       }
       case 5u: {
 	vertex = vec2(1.0, 1.0);
-	tex_coords = vec2(1.0,6.0 + a);
+	tex_coords = vec2(1.0,4.0 + a);
       }
 	default: {}
     }
@@ -62,8 +62,9 @@ var s_diffuse: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-  let visible_tile = i32(in.tex_coords.y / 1.0);
-  let s = textureSample(t_diffuse,s_diffuse,vec2(in.tex_coords.x,in.tex_coords.y % 1.0),visible_tile);
+  let tile_index = i32(floor(in.tex_coords.y)); // Index of the tile in the complete data set.
+  let visible_tile = (tile_index + 2) % 8; // Index of the tile in the buffer
+  let s = textureSample(t_diffuse,s_diffuse,vec2(in.tex_coords.x,fract(in.tex_coords.y)),visible_tile);
   return vec4<f32>(hsv_to_rgb(vec3<f32>(0.109,0.9,clamp(s.x/10000.0,0.0,1.0))),1.0);
   
 }
