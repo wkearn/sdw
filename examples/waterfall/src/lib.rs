@@ -564,11 +564,13 @@ impl State {
 	let delta = self.delta;
 	let old_row_idx = self.idx as i32;
 	let old_tile_idx = old_row_idx / 256;
+
+	let tile_max = (self.row_max / 256) as i32;
 	
-	let new_row_idx = (old_row_idx + delta).clamp(0,(self.row_max as i32) - 256 * 6);
+	let new_row_idx = (old_row_idx + delta).clamp(0,self.row_max as i32);
 	let new_tile_idx = new_row_idx / 256;
 
-	if new_tile_idx > old_tile_idx {
+	if (new_tile_idx > old_tile_idx) && (new_tile_idx < tile_max - 5) {
 	    // Load the next tile
 	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
 	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
