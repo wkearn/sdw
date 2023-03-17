@@ -5,11 +5,16 @@ pub struct Texture {
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
     dimensions: (u32, u32),
-    layers: u32
+    layers: u32,
 }
 
 impl Texture {
-    pub fn new(context: &Context, dimensions: (u32, u32), layers: u32, label: Option<&str>) -> Self {
+    pub fn new(
+        context: &Context,
+        dimensions: (u32, u32),
+        layers: u32,
+        label: Option<&str>,
+    ) -> Self {
         let size = wgpu::Extent3d {
             width: dimensions.0,
             height: dimensions.1,
@@ -44,7 +49,7 @@ impl Texture {
             view,
             sampler,
             dimensions,
-	    layers
+            layers,
         }
     }
 
@@ -53,6 +58,6 @@ impl Texture {
     }
 
     pub fn layers(&self) -> &u32 {
-	&self.layers
+        &self.layers
     }
 }
