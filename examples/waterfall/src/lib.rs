@@ -4,8 +4,6 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use wgpu::util::DeviceExt;
-
 pub mod compute;
 pub mod context;
 pub mod texture;
