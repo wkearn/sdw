@@ -541,9 +541,7 @@ impl State {
                     },
                 ..
             } => {
-                if self.idx < self.row_max - 1024 - 10 {
-                    self.delta = 10;
-                }
+                self.delta = 10;
                 true
             }
             WindowEvent::KeyboardInput {
@@ -555,9 +553,7 @@ impl State {
                     },
                 ..
             } => {
-                if self.idx > 0 {
-                    self.delta = -10;
-                }
+                self.delta = -10;
                 true
             },
             _ => false,
@@ -569,7 +565,7 @@ impl State {
 	let old_row_idx = self.idx as i32;
 	let old_tile_idx = old_row_idx / 256;
 	
-	let new_row_idx = old_row_idx + delta;
+	let new_row_idx = (old_row_idx + delta).clamp(0,(self.row_max as i32) - 256 * 6);
 	let new_tile_idx = new_row_idx / 256;
 
 	if new_tile_idx > old_tile_idx {
@@ -577,7 +573,7 @@ impl State {
 	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
 	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
 	    log::debug!("Loading new tile {}...",new_tile_idx + 5);
-	} else if new_tile_idx < old_tile_idx {
+	} else if (new_tile_idx < old_tile_idx) && (new_tile_idx > 2) {
 	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
 	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
 	    log::debug!("Loading new tile {}...",new_tile_idx - 2);
