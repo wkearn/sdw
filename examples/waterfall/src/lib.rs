@@ -69,7 +69,7 @@ impl SonarDataBuffer {
             wgpu::Extent3d {
                 width: texture.dimensions().0,
                 height: texture.dimensions().1,
-                depth_or_array_layers: 8,
+                depth_or_array_layers: *texture.layers(),
             },
         );
     }
