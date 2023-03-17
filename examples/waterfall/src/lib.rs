@@ -412,7 +412,7 @@ impl State {
                 ..
             } => {
                 if self.idx < self.row_max - 1024 - 10 {
-                    //self.idx += 10;
+                    self.idx += 10;
                 }
                 true
             }
@@ -426,7 +426,7 @@ impl State {
                 ..
             } => {
                 if self.idx > 0 {
-                    //self.idx -= 10;
+                    self.idx -= 10;
                 }
                 true
             }
