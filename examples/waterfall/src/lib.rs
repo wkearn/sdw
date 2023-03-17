@@ -163,6 +163,7 @@ struct State {
     starboard_texture: texture::Texture,
     starboard_bind_group: wgpu::BindGroup,
     idx: usize,
+    delta: i32,
     port_data_buffer: SonarDataBuffer,
     starboard_data_buffer: SonarDataBuffer,
     row_max: usize,
@@ -495,6 +496,7 @@ impl State {
             starboard_texture,
             starboard_bind_group,
             idx: 0,
+	    delta: 0,
             port_data_buffer,
             starboard_data_buffer,
             row_max,
@@ -540,7 +542,7 @@ impl State {
                 ..
             } => {
                 if self.idx < self.row_max - 1024 - 10 {
-                    self.idx += 10;
+                    self.delta = 10;
                 }
                 true
             }
@@ -554,37 +556,41 @@ impl State {
                 ..
             } => {
                 if self.idx > 0 {
-                    self.idx -= 10;
+                    self.delta = -10;
                 }
                 true
             },
-	    WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state: ElementState::Pressed,
-                        virtual_keycode: Some(VirtualKeyCode::Space),
-                        ..
-                    },
-                ..
-            } => {
-                if self.idx > 0 {
-                    self.idx = 0;
-                }
-                true
-            },
-
             _ => false,
         }
     }
 
-    fn update(&mut self) {
+    fn update(&mut self) {	
+	let delta = self.delta;
+	let old_row_idx = self.idx as i32;
+	let old_tile_idx = old_row_idx / 256;
+	
+	let new_row_idx = old_row_idx + delta;
+	let new_tile_idx = new_row_idx / 256;
+
+	if new_tile_idx > old_tile_idx {
+	    // Load the next tile
+	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
+	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
+	    log::debug!("Loading new tile {}...",new_tile_idx + 5);
+	} else if new_tile_idx < old_tile_idx {
+	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
+	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
+	    log::debug!("Loading new tile {}...",new_tile_idx - 2);
+	} 
+
+	// Update the index
+	self.idx = new_row_idx as usize;
+	// Update the viewport
 	let a = (self.idx as f32) / 256.0;	
 	self.context.queue.write_buffer(&self.viewport_buffer,0,bytemuck::cast_slice(&[0.0f32,a]));
-	
-        //self.port_data_buffer
-        //.update_buffer_from_idx(&self.context, self.idx);
-        //self.starboard_data_buffer
-        //.update_buffer_from_idx(&self.context, self.idx);
+
+	// Stop updating
+	self.delta = 0;
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
