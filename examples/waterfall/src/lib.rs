@@ -217,6 +217,8 @@ impl State {
 
         let dimensions: (u32, u32) = (padded_len as u32, 2048);
 
+	let tile_max = (row_max / 256) as i32;
+	
         // Create data buffers
         let port_data_buffer =
             SonarDataBuffer::new(&context, port_data, dimensions).initialize(&context);
@@ -567,18 +569,16 @@ impl State {
 
 	let tile_max = (self.row_max / 256) as i32;
 	
-	let new_row_idx = (old_row_idx + delta).clamp(0,self.row_max as i32);
+	let new_row_idx = (old_row_idx + delta).clamp(0,256 * tile_max - 1024);
 	let new_tile_idx = new_row_idx / 256;
 
 	if (new_tile_idx > old_tile_idx) && (new_tile_idx < tile_max - 5) {
 	    // Load the next tile
 	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
 	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
-	    log::debug!("Loading new tile {}...",new_tile_idx + 5);
 	} else if (new_tile_idx < old_tile_idx) && (new_tile_idx > 2) {
 	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
 	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
-	    log::debug!("Loading new tile {}...",new_tile_idx - 2);
 	} 
 
 	// Update the index
