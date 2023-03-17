@@ -36,6 +36,16 @@ impl SonarDataBuffer {
         }
     }
 
+    fn initialize(mut self,context: &context::Context) -> Self {	
+	self.update_buffer_from_tile(context, 0);
+	self.update_buffer_from_tile(context, 1);
+	self.update_buffer_from_tile(context, 2);
+	self.update_buffer_from_tile(context, 3);
+	self.update_buffer_from_tile(context, 4);
+	self.update_buffer_from_tile(context, 5);
+	self
+    }
+
     fn copy_buffer_to_texture(
         &self,
         encoder: &mut wgpu::CommandEncoder,
@@ -189,8 +199,8 @@ impl State {
         let dimensions: (u32, u32) = (padded_len as u32, 2048);
 
         // Create data buffers
-        let port_data_buffer = SonarDataBuffer::new(&context, port_data, dimensions);
-        let starboard_data_buffer = SonarDataBuffer::new(&context, starboard_data, dimensions);
+        let port_data_buffer = SonarDataBuffer::new(&context, port_data, dimensions).initialize(&context);
+        let starboard_data_buffer = SonarDataBuffer::new(&context, starboard_data, dimensions).initialize(&context);
 
         let texture_dimensions: (u32, u32) = (padded_len as u32, 256);
 
@@ -509,9 +519,9 @@ impl State {
                 });
 
         self.port_data_buffer
-            .copy_tile_to_texture(&mut encoder, &self.port_texture, 0);
+            .copy_buffer_to_texture(&mut encoder, &self.port_texture);
         self.starboard_data_buffer
-            .copy_tile_to_texture(&mut encoder, &self.starboard_texture, 0);
+            .copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
 
         // Run compute shaders here
 
