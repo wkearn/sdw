@@ -4,9 +4,25 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+use wgpu::util::DeviceExt;
+
 pub mod compute;
 pub mod context;
 pub mod texture;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+struct Viewport {
+    viewport: [f32; 2],
+}
+
+impl Viewport {
+    pub fn new() -> Self {
+        Viewport {
+            viewport: [0.0, 0.0],
+        }
+    }
+}
 
 struct SonarDataBuffer {
     data: Vec<f32>,
@@ -160,6 +176,8 @@ struct State {
     downsweep_shader: compute::ComputeShader,
     downsweep_output_buffer: wgpu::Buffer,
     downsweep_bind_group: wgpu::BindGroup,
+    viewport_buffer: wgpu::Buffer,
+    viewport_bind_group: wgpu::BindGroup
 }
 
 impl State {
@@ -271,6 +289,46 @@ impl State {
                 label: Some("Starboard bind group"),
             });
 
+        let viewport = Viewport::new();
+        let viewport_buffer =
+            context
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Viewport uniform buffer"),
+                    contents: bytemuck::cast_slice(&[viewport]),
+                    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                });
+
+        let viewport_bind_group_layout =
+            context
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Viewport bind group layout"),
+                    entries: &[wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    }],
+                });
+
+        let viewport_bind_group = context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Viewport bind group"),
+                layout: &viewport_bind_group_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: viewport_buffer.as_entire_binding(),
+                }],
+            });
+
+	
+
         let shader = context
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -283,7 +341,10 @@ impl State {
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render pipeline layout"),
-                    bind_group_layouts: &[&texture_bind_group_layout],
+                    bind_group_layouts: &[
+			&texture_bind_group_layout,
+			&viewport_bind_group_layout
+		    ],
                     push_constant_ranges: &[],
                 });
 
@@ -447,6 +508,8 @@ impl State {
             downsweep_shader,
             downsweep_output_buffer,
             downsweep_bind_group,
+	    viewport_buffer,
+	    viewport_bind_group
         }
     }
 
@@ -500,10 +563,13 @@ impl State {
     }
 
     fn update(&mut self) {
-        self.port_data_buffer
-            .update_buffer_from_idx(&self.context, self.idx);
-        self.starboard_data_buffer
-            .update_buffer_from_idx(&self.context, self.idx);
+	let a = (self.idx as f32) / 256.0;	
+	self.context.queue.write_buffer(&self.viewport_buffer,0,bytemuck::cast_slice(&[0.0f32,a]));
+	
+        //self.port_data_buffer
+        //.update_buffer_from_idx(&self.context, self.idx);
+        //self.starboard_data_buffer
+        //.update_buffer_from_idx(&self.context, self.idx);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -590,10 +656,12 @@ impl State {
 
             // Draw and texture the port quad
             render_pass.set_bind_group(0, &self.port_bind_group, &[]);
+	    render_pass.set_bind_group(1, &self.viewport_bind_group, &[]);
             render_pass.draw(0..6, 1..2);
 
             // Draw and texture the starboard quad
             render_pass.set_bind_group(0, &self.starboard_bind_group, &[]);
+	    render_pass.set_bind_group(1, &self.viewport_bind_group, &[]);
             render_pass.draw(0..6, 0..1);
         }
 

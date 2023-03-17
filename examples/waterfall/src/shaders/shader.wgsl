@@ -1,27 +1,36 @@
 struct VertexOutput {
   @builtin(position) clip_position: vec4<f32>,
   @location(0) tex_coords: vec2<f32>,
-}
+};
 
+struct Viewport {
+ viewport: vec2<f32>,
+};
+
+@group(1) @binding(0)
+var<uniform> viewport: Viewport;  
+  
 @vertex
 fn vs_main(@builtin(vertex_index) idx: u32,
 	   @builtin(instance_index) instance: u32) -> VertexOutput {
   var out: VertexOutput;
 
+  let a = viewport.viewport.y;
+  
   var vertex = vec2(0.0, 1.0);
-  var tex_coords = vec2(0.0,6.0);
+  var tex_coords = vec2(0.0,6.0 + a);
   switch idx {
       case 1u: {
 	vertex = vec2(0.0, -1.0);
-	tex_coords = vec2(0.0,2.0);
+	tex_coords = vec2(0.0,2.0 + a);
       }
       case 2u, 4u: {
 	vertex = vec2(1.0, -1.0);
-	tex_coords = vec2(1.0,2.0);
+	tex_coords = vec2(1.0,2.0 + a);
       }
       case 5u: {
 	vertex = vec2(1.0, 1.0);
-	tex_coords = vec2(1.0,6.0);
+	tex_coords = vec2(1.0,6.0 + a);
       }
 	default: {}
     }
