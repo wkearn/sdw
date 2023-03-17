@@ -75,28 +75,30 @@ impl SonarDataBuffer {
     }
 
     fn update_buffer_from_tile(&mut self, context: &context::Context, tile: usize) {
-	let tile_length = 256 * self.dimensions.0 as usize;
+        let tile_length = 256 * self.dimensions.0 as usize;
         let tile_start = tile * tile_length;
         let tile_end = (tile + 1) * tile_length;
         let tile_data = &self.data[tile_start..tile_end];
 
-	let buffer_offset = (tile + 2) % 8 * tile_length * 4;
-	
-        context
-            .queue
-            .write_buffer(&self.buffer, buffer_offset as u64, bytemuck::cast_slice(tile_data));
+        let buffer_offset = (tile + 2) % 8 * tile_length * 4;
+
+        context.queue.write_buffer(
+            &self.buffer,
+            buffer_offset as u64,
+            bytemuck::cast_slice(tile_data),
+        );
     }
 
     fn copy_tile_to_texture(
         &self,
         encoder: &mut wgpu::CommandEncoder,
         texture: &texture::Texture,
-	tile: u32,
+        tile: u32,
     ) {
-	let tile_length = 256 * self.dimensions.0;
-	let array_level = (tile + 2) % 8;
-	let buffer_offset = array_level * tile_length * 4;
-	
+        let tile_length = 256 * self.dimensions.0;
+        let array_level = (tile + 2) % 8;
+        let buffer_offset = array_level * tile_length * 4;
+
         encoder.copy_buffer_to_texture(
             wgpu::ImageCopyBuffer {
                 buffer: &self.buffer,
@@ -110,10 +112,10 @@ impl SonarDataBuffer {
                 texture: &texture.texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d {
-		    x: 0,
-		    y: 0,
-		    z: array_level
-		},
+                    x: 0,
+                    y: 0,
+                    z: array_level,
+                },
                 aspect: wgpu::TextureAspect::All,
             },
             wgpu::Extent3d {
@@ -507,9 +509,9 @@ impl State {
                 });
 
         self.port_data_buffer
-            .copy_buffer_to_texture(&mut encoder, &self.port_texture);
+            .copy_tile_to_texture(&mut encoder, &self.port_texture, 0);
         self.starboard_data_buffer
-            .copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
+            .copy_tile_to_texture(&mut encoder, &self.starboard_texture, 0);
 
         // Run compute shaders here
 
