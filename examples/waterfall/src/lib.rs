@@ -59,7 +59,7 @@ impl SonarDataBuffer {
             wgpu::Extent3d {
                 width: texture.dimensions().0,
                 height: texture.dimensions().1,
-                depth_or_array_layers: 1,
+                depth_or_array_layers: 8,
             },
         );
     }
@@ -134,16 +134,18 @@ impl State {
 
         context.surface.configure(&context.device, &config);
 
-        let dimensions: (u32, u32) = (padded_len as u32, 1024);
+        let dimensions: (u32, u32) = (padded_len as u32, 2048);
 
         // Create data buffers
         let port_data_buffer = SonarDataBuffer::new(&context, port_data, dimensions);
         let starboard_data_buffer = SonarDataBuffer::new(&context, starboard_data, dimensions);
 
+	let texture_dimensions: (u32, u32) = (padded_len as u32, 256);
+	
         // Create texture
-        let port_texture = texture::Texture::new(&context, dimensions, 2, Some("Port texture"));
+        let port_texture = texture::Texture::new(&context, texture_dimensions, 8, Some("Port texture"));
         let starboard_texture =
-            texture::Texture::new(&context, dimensions, 2, Some("Starboard texture"));
+            texture::Texture::new(&context, texture_dimensions, 8, Some("Starboard texture"));
 
         let texture_bind_group_layout =
             context

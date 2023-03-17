@@ -9,19 +9,19 @@ fn vs_main(@builtin(vertex_index) idx: u32,
   var out: VertexOutput;
 
   var vertex = vec2(0.0, 1.0);
-  var tex_coords = vec2(0.0,2.0);
+  var tex_coords = vec2(0.0,6.0);
   switch idx {
       case 1u: {
 	vertex = vec2(0.0, -1.0);
-	tex_coords = vec2(0.0,0.0);
+	tex_coords = vec2(0.0,2.0);
       }
       case 2u, 4u: {
 	vertex = vec2(1.0, -1.0);
-	tex_coords = vec2(1.0,0.0);
+	tex_coords = vec2(1.0,2.0);
       }
       case 5u: {
 	vertex = vec2(1.0, 1.0);
-	tex_coords = vec2(1.0,2.0);
+	tex_coords = vec2(1.0,6.0);
       }
 	default: {}
     }
