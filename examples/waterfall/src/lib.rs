@@ -557,7 +557,22 @@ impl State {
                     self.idx -= 10;
                 }
                 true
-            }
+            },
+	    WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Space),
+                        ..
+                    },
+                ..
+            } => {
+                if self.idx > 0 {
+                    self.idx = 0;
+                }
+                true
+            },
+
             _ => false,
         }
     }
