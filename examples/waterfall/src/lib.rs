@@ -73,6 +73,56 @@ impl SonarDataBuffer {
             .queue
             .write_buffer(&self.buffer, 0, bytemuck::cast_slice(new_data));
     }
+
+    fn update_buffer_from_tile(&mut self, context: &context::Context, tile: usize) {
+	let tile_length = 256 * self.dimensions.0 as usize;
+        let tile_start = tile * tile_length;
+        let tile_end = (tile + 1) * tile_length;
+        let tile_data = &self.data[tile_start..tile_end];
+
+	let buffer_offset = (tile + 2) % 8 * tile_length * 4;
+	
+        context
+            .queue
+            .write_buffer(&self.buffer, buffer_offset as u64, bytemuck::cast_slice(tile_data));
+    }
+
+    fn copy_tile_to_texture(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        texture: &texture::Texture,
+	tile: u32,
+    ) {
+	let tile_length = 256 * self.dimensions.0;
+	let array_level = (tile + 2) % 8;
+	let buffer_offset = array_level * tile_length * 4;
+	
+        encoder.copy_buffer_to_texture(
+            wgpu::ImageCopyBuffer {
+                buffer: &self.buffer,
+                layout: wgpu::ImageDataLayout {
+                    offset: buffer_offset.into(),
+                    bytes_per_row: std::num::NonZeroU32::new(4 * texture.dimensions().0),
+                    rows_per_image: std::num::NonZeroU32::new(texture.dimensions().1),
+                },
+            },
+            wgpu::ImageCopyTexture {
+                texture: &texture.texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d {
+		    x: 0,
+		    y: 0,
+		    z: array_level
+		},
+                aspect: wgpu::TextureAspect::All,
+            },
+            wgpu::Extent3d {
+                width: texture.dimensions().0,
+                height: texture.dimensions().1,
+                depth_or_array_layers: 1,
+            },
+        );
+    }
 }
 
 struct State {
@@ -140,10 +190,11 @@ impl State {
         let port_data_buffer = SonarDataBuffer::new(&context, port_data, dimensions);
         let starboard_data_buffer = SonarDataBuffer::new(&context, starboard_data, dimensions);
 
-	let texture_dimensions: (u32, u32) = (padded_len as u32, 256);
-	
+        let texture_dimensions: (u32, u32) = (padded_len as u32, 256);
+
         // Create texture
-        let port_texture = texture::Texture::new(&context, texture_dimensions, 8, Some("Port texture"));
+        let port_texture =
+            texture::Texture::new(&context, texture_dimensions, 8, Some("Port texture"));
         let starboard_texture =
             texture::Texture::new(&context, texture_dimensions, 8, Some("Starboard texture"));
 
@@ -455,58 +506,59 @@ impl State {
                     label: Some("Render encoder"),
                 });
 
-        self.port_data_buffer.copy_buffer_to_texture(&mut encoder, &self.port_texture);
+        self.port_data_buffer
+            .copy_buffer_to_texture(&mut encoder, &self.port_texture);
         self.starboard_data_buffer
             .copy_buffer_to_texture(&mut encoder, &self.starboard_texture);
 
         // Run compute shaders here
 
-	/*
-	// Reduce the sonar data
-        self.reduce_shader.dispatch(
-            &self.reduce_bind_group,
-            &mut encoder,
-            (self.num_blocks, self.port_data_buffer.dimensions.1, 1),
-        );
+        /*
+        // Reduce the sonar data
+            self.reduce_shader.dispatch(
+                &self.reduce_bind_group,
+                &mut encoder,
+                (self.num_blocks, self.port_data_buffer.dimensions.1, 1),
+            );
 
-        // Reduce the block sums
-        self.block_increment_shader.dispatch(
-            &self.block_increment_bind_group,
-            &mut encoder,
-            (1, self.port_data_buffer.dimensions.1, 1),
-        );
+            // Reduce the block sums
+            self.block_increment_shader.dispatch(
+                &self.block_increment_bind_group,
+                &mut encoder,
+                (1, self.port_data_buffer.dimensions.1, 1),
+            );
 
-        // Downsweep
-        self.downsweep_shader.dispatch(
-            &self.downsweep_bind_group,
-            &mut encoder,
-            (self.num_blocks, self.port_data_buffer.dimensions.1, 1),
-        );
+            // Downsweep
+            self.downsweep_shader.dispatch(
+                &self.downsweep_bind_group,
+                &mut encoder,
+                (self.num_blocks, self.port_data_buffer.dimensions.1, 1),
+            );
 
-        // Copy the downsweep output buffer into the port texture for testing
+            // Copy the downsweep output buffer into the port texture for testing
 
-        encoder.copy_buffer_to_texture(
-            wgpu::ImageCopyBuffer {
-                buffer: &self.downsweep_output_buffer,
-                layout: wgpu::ImageDataLayout {
-                    offset: 0,
-                    bytes_per_row: std::num::NonZeroU32::new(4 * self.port_texture.dimensions().0),
-                    rows_per_image: std::num::NonZeroU32::new(self.port_texture.dimensions().1),
+            encoder.copy_buffer_to_texture(
+                wgpu::ImageCopyBuffer {
+                    buffer: &self.downsweep_output_buffer,
+                    layout: wgpu::ImageDataLayout {
+                        offset: 0,
+                        bytes_per_row: std::num::NonZeroU32::new(4 * self.port_texture.dimensions().0),
+                        rows_per_image: std::num::NonZeroU32::new(self.port_texture.dimensions().1),
+                    },
                 },
-            },
-            wgpu::ImageCopyTexture {
-                texture: &self.port_texture.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            wgpu::Extent3d {
-                width: self.port_texture.dimensions().0,
-                height: self.port_texture.dimensions().1,
-                depth_or_array_layers: 1,
-            },
-        );
-	 */
+                wgpu::ImageCopyTexture {
+                    texture: &self.port_texture.texture,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                wgpu::Extent3d {
+                    width: self.port_texture.dimensions().0,
+                    height: self.port_texture.dimensions().1,
+                    depth_or_array_layers: 1,
+                },
+            );
+         */
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render pass"),
@@ -522,9 +574,9 @@ impl State {
             });
             render_pass.set_pipeline(&self.render_pipeline);
 
-	    // Draw and texture the port quad
+            // Draw and texture the port quad
             render_pass.set_bind_group(0, &self.port_bind_group, &[]);
-            render_pass.draw(0..6,1..2);
+            render_pass.draw(0..6, 1..2);
 
             // Draw and texture the starboard quad
             render_pass.set_bind_group(0, &self.starboard_bind_group, &[]);
