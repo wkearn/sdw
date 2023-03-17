@@ -1,6 +1,7 @@
 struct VertexOutput {
   @builtin(position) clip_position: vec4<f32>,
   @location(0) tex_coords: vec2<f32>,
+  @location(1) @interpolate(flat) tile_level: i32
 }
 
 @vertex
@@ -30,11 +31,13 @@ fn vs_main(@builtin(vertex_index) idx: u32,
       // Starboard instance
       out.tex_coords = tex_coords;
       out.clip_position = vec4<f32>(vertex,0.0,1.0);
+      out.tile_level = 0;
     }
   else {
     // Port instance
     out.tex_coords = vec2<f32>(1.0 - tex_coords.x,tex_coords.y);
     out.clip_position = vec4<f32>(vertex - vec2<f32>(1.0,0.0),0.0,1.0);
+    out.tile_level = 0;
   }
 
   return out;
@@ -53,6 +56,6 @@ var s_diffuse: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-  let s = textureSample(t_diffuse,s_diffuse,in.tex_coords,0);
+  let s = textureSample(t_diffuse,s_diffuse,in.tex_coords,in.tile_level);
   return vec4<f32>(hsv_to_rgb(vec3<f32>(0.109,0.9,clamp(s.x/10000.0,0.0,1.0))),1.0);
 }
