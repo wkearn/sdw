@@ -178,7 +178,7 @@ struct State {
     downsweep_output_buffer: wgpu::Buffer,
     downsweep_bind_group: wgpu::BindGroup,
     viewport_buffer: wgpu::Buffer,
-    viewport_bind_group: wgpu::BindGroup
+    viewport_bind_group: wgpu::BindGroup,
 }
 
 impl State {
@@ -217,8 +217,8 @@ impl State {
 
         let dimensions: (u32, u32) = (padded_len as u32, 2048);
 
-	let tile_max = (row_max / 256) as i32;
-	
+        let tile_max = (row_max / 256) as i32;
+
         // Create data buffers
         let port_data_buffer =
             SonarDataBuffer::new(&context, port_data, dimensions).initialize(&context);
@@ -330,8 +330,6 @@ impl State {
                 }],
             });
 
-	
-
         let shader = context
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -344,10 +342,7 @@ impl State {
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render pipeline layout"),
-                    bind_group_layouts: &[
-			&texture_bind_group_layout,
-			&viewport_bind_group_layout
-		    ],
+                    bind_group_layouts: &[&texture_bind_group_layout, &viewport_bind_group_layout],
                     push_constant_ranges: &[],
                 });
 
@@ -498,7 +493,7 @@ impl State {
             starboard_texture,
             starboard_bind_group,
             idx: 0,
-	    delta: 0,
+            delta: 0,
             port_data_buffer,
             starboard_data_buffer,
             row_max,
@@ -512,8 +507,8 @@ impl State {
             downsweep_shader,
             downsweep_output_buffer,
             downsweep_bind_group,
-	    viewport_buffer,
-	    viewport_bind_group
+            viewport_buffer,
+            viewport_bind_group,
         }
     }
 
@@ -557,38 +552,46 @@ impl State {
             } => {
                 self.delta = -10;
                 true
-            },
+            }
             _ => false,
         }
     }
 
-    fn update(&mut self) {	
-	let delta = self.delta;
-	let old_row_idx = self.idx as i32;
-	let old_tile_idx = old_row_idx / 256;
+    fn update(&mut self) {
+        let delta = self.delta;
+        let old_row_idx = self.idx as i32;
+        let old_tile_idx = old_row_idx / 256;
 
-	let tile_max = (self.row_max / 256) as i32;
-	
-	let new_row_idx = (old_row_idx + delta).clamp(0,256 * tile_max - 1024);
-	let new_tile_idx = new_row_idx / 256;
+        let tile_max = (self.row_max / 256) as i32;
 
-	if (new_tile_idx > old_tile_idx) && (new_tile_idx < tile_max - 5) {
-	    // Load the next tile
-	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
-	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx + 5) as usize);
-	} else if (new_tile_idx < old_tile_idx) && (new_tile_idx > 2) {
-	    self.port_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
-	    self.starboard_data_buffer.update_buffer_from_tile(&self.context,(new_tile_idx - 2) as usize);
-	} 
+        let new_row_idx = (old_row_idx + delta).clamp(0, 256 * tile_max - 1024);
+        let new_tile_idx = new_row_idx / 256;
 
-	// Update the index
-	self.idx = new_row_idx as usize;
-	// Update the viewport
-	let a = (self.idx as f32) / 256.0;	
-	self.context.queue.write_buffer(&self.viewport_buffer,0,bytemuck::cast_slice(&[0.0f32,a]));
+        if (new_tile_idx > old_tile_idx) && (new_tile_idx < tile_max - 5) {
+            // Load the next tile
+            self.port_data_buffer
+                .update_buffer_from_tile(&self.context, (new_tile_idx + 5) as usize);
+            self.starboard_data_buffer
+                .update_buffer_from_tile(&self.context, (new_tile_idx + 5) as usize);
+        } else if (new_tile_idx < old_tile_idx) && (new_tile_idx > 2) {
+            self.port_data_buffer
+                .update_buffer_from_tile(&self.context, (new_tile_idx - 2) as usize);
+            self.starboard_data_buffer
+                .update_buffer_from_tile(&self.context, (new_tile_idx - 2) as usize);
+        }
 
-	// Stop updating
-	self.delta = 0;
+        // Update the index
+        self.idx = new_row_idx as usize;
+        // Update the viewport
+        let a = (self.idx as f32) / 256.0;
+        self.context.queue.write_buffer(
+            &self.viewport_buffer,
+            0,
+            bytemuck::cast_slice(&[0.0f32, a]),
+        );
+
+        // Stop updating
+        self.delta = 0;
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -675,12 +678,12 @@ impl State {
 
             // Draw and texture the port quad
             render_pass.set_bind_group(0, &self.port_bind_group, &[]);
-	    render_pass.set_bind_group(1, &self.viewport_bind_group, &[]);
+            render_pass.set_bind_group(1, &self.viewport_bind_group, &[]);
             render_pass.draw(0..6, 1..2);
 
             // Draw and texture the starboard quad
             render_pass.set_bind_group(0, &self.starboard_bind_group, &[]);
-	    render_pass.set_bind_group(1, &self.viewport_bind_group, &[]);
+            render_pass.set_bind_group(1, &self.viewport_bind_group, &[]);
             render_pass.draw(0..6, 0..1);
         }
 
