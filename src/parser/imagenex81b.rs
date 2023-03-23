@@ -98,7 +98,7 @@ impl From<Shot> for SonarDataRecord<u8> {
 /// An iterator interface to an Imagenex .81b file
 pub struct File<T: io::Read + io::Seek> {
     /// The reader from which bytes are read and parsed
-    pub reader: T,
+    reader: T,
 }
 
 impl<T> File<T>
