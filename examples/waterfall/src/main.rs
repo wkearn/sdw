@@ -1,5 +1,3 @@
-use waterfall;
-
 use sdw::{
     model::{Ping, SonarDataRecord},
     parser::jsf,
