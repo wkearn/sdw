@@ -573,11 +573,13 @@ impl State {
                 .update_buffer_from_tile(&self.context, (new_tile_idx + 5) as usize);
             self.starboard_data_buffer
                 .update_buffer_from_tile(&self.context, (new_tile_idx + 5) as usize);
+	    log::debug!("Loading tile {}",new_tile_idx + 5);
         } else if (new_tile_idx < old_tile_idx) && (new_tile_idx > 2) {
             self.port_data_buffer
                 .update_buffer_from_tile(&self.context, (new_tile_idx - 2) as usize);
             self.starboard_data_buffer
                 .update_buffer_from_tile(&self.context, (new_tile_idx - 2) as usize);
+	    log::debug!("Loading tile {}",new_tile_idx - 2);
         }
 
         // Update the index
