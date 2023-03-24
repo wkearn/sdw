@@ -209,7 +209,7 @@ impl State {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::AutoVsync,
-            alpha_mode: surface_caps.alpha_modes[0],
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![],
         };
 
