@@ -705,6 +705,8 @@ pub async fn run(port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usiz
         .build(&event_loop)
         .unwrap();
 
+    log::debug!("Number of rows {row_max}");
+    
     let mut state = State::new(window, port_data, starboard_data, padded_len, row_max).await;
 
     event_loop.run(move |event, _, control_flow| {
