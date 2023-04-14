@@ -55,6 +55,30 @@ fn hsv_to_rgb(c: vec3<f32>) -> vec3<f32> {
   return c.z * mix(K.xxx, clamp(p - K.xxx, vec3<f32>(0.0,0.0,0.0), vec3<f32>(1.0,1.0,1.0)), c.y);
 }
 
+fn lab_to_xyz(c: vec3<f32>) -> vec3<f32> {
+  let xyz = vec3<f32>((c.x + 16.0) / 116.0 + c.y / 500.0, (c.x + 16.0) / 116.0, (c.x + 16.0) / 116.0 - c.z / 200.0);
+  let delta = vec3<f32>(6.0 / 29.0);
+  let d65 = vec3<f32>(0.950489, 1.0, 1.08840);
+  return d65 * select(pow(xyz,vec3<f32>(3.0)), 3.0 * pow(delta,vec3<f32>(2.0)) * (xyz - 4.0 / 29.0),xyz <= delta);
+}
+
+fn rgb_to_srgb(rgb: vec3<f32>) -> vec3<f32> {
+  let thresh = vec3<f32>(0.0031308);
+  return select(1.055*pow(rgb,vec3<f32>(1.0 / 2.4)) - 0.055,12.92 * rgb, rgb <= thresh);
+}
+
+fn xyz_to_srgb(c: vec3<f32>) -> vec3<f32> {
+  let conversion =  mat3x3<f32>(3.2406, -0.9689,0.0557, -1.5372, 1.8758, -0.2040, -0.4986, 0.0415, 1.0570);
+  let rgb = conversion * c;
+  return rgb_to_srgb(rgb);
+}
+
+
+
+fn lab_to_srgb(c: vec3<f32>) -> vec3<f32> {  
+  return xyz_to_srgb(lab_to_xyz(c));
+}
+
 @group(0) @binding(0)
 var t_diffuse: texture_2d_array<f32>;
 @group(0) @binding(1)
@@ -65,6 +89,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   let tile_index = i32(floor(in.tex_coords.y)); // Index of the tile in the complete data set.
   let visible_tile = (tile_index + 2) % 8; // Index of the tile in the buffer
   let s = textureSample(t_diffuse,s_diffuse,vec2(in.tex_coords.x,fract(in.tex_coords.y)),visible_tile);
-  return vec4<f32>(hsv_to_rgb(vec3<f32>(0.109,0.9,clamp(s.x/10000.0,0.0,1.0))),1.0);
+  let v = sqrt(clamp(s.x / 10000.0, 0.0,1.0));
+  return vec4<f32>(lab_to_srgb(vec3<f32>(100.0*v,18.0*v,77.0*v)),1.0);
   
 }
