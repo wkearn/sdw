@@ -67,16 +67,13 @@ fn rgb_to_srgb(rgb: vec3<f32>) -> vec3<f32> {
   return select(1.055*pow(rgb,vec3<f32>(1.0 / 2.4)) - 0.055,12.92 * rgb, rgb <= thresh);
 }
 
-fn xyz_to_srgb(c: vec3<f32>) -> vec3<f32> {
+fn xyz_to_rgb(c: vec3<f32>) -> vec3<f32> {
   let conversion =  mat3x3<f32>(3.2406, -0.9689,0.0557, -1.5372, 1.8758, -0.2040, -0.4986, 0.0415, 1.0570);
-  let rgb = conversion * c;
-  return rgb_to_srgb(rgb);
+  return conversion * c;
 }
 
-
-
 fn lab_to_srgb(c: vec3<f32>) -> vec3<f32> {  
-  return xyz_to_srgb(lab_to_xyz(c));
+  return rgb_to_srgb(xyz_to_rgb(lab_to_xyz(c)));
 }
 
 @group(0) @binding(0)
