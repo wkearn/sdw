@@ -1,6 +1,7 @@
 struct VertexOutput {
   @builtin(position) clip_position: vec4<f32>,
   @location(0) tex_coords: vec2<f32>,
+  @location(1) @interpolate(flat) instance: u32,
 };
 
 struct Viewport {
@@ -39,11 +40,16 @@ fn vs_main(@builtin(vertex_index) idx: u32,
       // Starboard instance
       out.tex_coords = tex_coords;
       out.clip_position = vec4<f32>(vertex,0.0,1.0);
-    }
-  else {
+      out.instance = 0u;
+    } else if instance == 1u {
     // Port instance
     out.tex_coords = vec2<f32>(1.0 - tex_coords.x,tex_coords.y);
     out.clip_position = vec4<f32>(vertex - vec2<f32>(1.0,0.0),0.0,1.0);
+    out.instance = 1u;
+    } else {
+    out.tex_coords = vec2<f32>(0.0);
+    out.clip_position = vec4<f32>(vec2<f32>(2.0,1.0) * vertex - vec2<f32>(1.0,0.0),0.0,1.0);
+    out.instance = 2u;
   }
 
   return out;
@@ -77,16 +83,22 @@ fn lab_to_srgb(c: vec3<f32>) -> vec3<f32> {
 }
 
 @group(0) @binding(0)
-var t_diffuse: texture_2d_array<f32>;
+var t: texture_2d_array<f32>;
 @group(0) @binding(1)
-var s_diffuse: sampler;
+var s: sampler;
+@group(0) @binding(2)
+var fine_output: texture_2d<f32>;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   let tile_index = i32(floor(in.tex_coords.y)); // Index of the tile in the complete data set.
   let visible_tile = (tile_index + 2) % 8; // Index of the tile in the buffer
-  let s = textureSample(t_diffuse,s_diffuse,vec2(in.tex_coords.x,fract(in.tex_coords.y)),visible_tile);
+  let s = textureSample(t,s,vec2(in.tex_coords.x,fract(in.tex_coords.y)),visible_tile);
   let v = sqrt(clamp(s.x / 10000.0, 0.0,1.0));
-  return vec4<f32>(lab_to_srgb(vec3<f32>(100.0*v,18.0*v,77.0*v)),1.0);
-  
+  if in.instance < 2u {
+      return vec4<f32>(lab_to_srgb(vec3<f32>(100.0*v,18.0*v,77.0*v)),1.0);
+    } else {
+    let rgba_sep = textureLoad(fine_output, vec2<i32>(in.clip_position.xy), 0);
+    return vec4(rgba_sep.rgb * rgba_sep.a, rgba_sep.a);
+  }
 }

@@ -33,11 +33,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .flat_map(|x| x.into_iter().chain(padding.clone()))
         .collect();
 
-    pollster::block_on(waterfall::run(
-        port_data,
-        starboard_data,
-        padded_len,
-        row_max,
+    /*
+        pollster::block_on(waterfall::run(
+           port_data,
+            starboard_data,
+            padded_len,
+            row_max,
     ));
+        */
+    waterfall::vello::main(port_data, starboard_data, padded_len, row_max);
     Ok(())
 }

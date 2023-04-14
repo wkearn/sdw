@@ -9,6 +9,7 @@ use wgpu::util::DeviceExt;
 pub mod compute;
 pub mod context;
 pub mod texture;
+pub mod vello;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -161,6 +162,7 @@ struct State {
     port_texture: texture::Texture,
     port_bind_group: wgpu::BindGroup,
     starboard_texture: texture::Texture,
+
     starboard_bind_group: wgpu::BindGroup,
     idx: usize,
     delta: i32,
@@ -202,6 +204,8 @@ impl State {
             .filter(|f| f.describe().srgb)
             .next()
             .unwrap_or(surface_caps.formats[0]);
+
+        eprintln!("Format: {:?}", surface_format);
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -706,7 +710,7 @@ pub async fn run(port_data: Vec<f32>, starboard_data: Vec<f32>, padded_len: usiz
         .unwrap();
 
     log::debug!("Number of rows {row_max}");
-    
+
     let mut state = State::new(window, port_data, starboard_data, padded_len, row_max).await;
 
     event_loop.run(move |event, _, control_flow| {
