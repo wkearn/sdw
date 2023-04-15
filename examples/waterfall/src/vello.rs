@@ -1,6 +1,9 @@
+mod app;
+mod render;
 mod sonar_data;
 
-use sonar_data::{SonarDataBuffer, SonarRenderer};
+use app::App;
+use sonar_data::SonarDataBuffer;
 
 use winit::{
     event::*,
@@ -41,15 +44,11 @@ fn run(
 
     let transform = Affine::IDENTITY;
 
-    let dimensions: (u32, u32) = (padded_len as u32, 2048);
+    let mut app = App::new(port_data, starboard_data, padded_len, row_max);
+
     let texture_dimensions: (u32, u32) = (padded_len as u32, 256);
 
-    let tile_max = (row_max / 256) as i32;
-
-    let mut port_data_buffer = SonarDataBuffer::new(port_data, dimensions);
-    let mut starboard_data_buffer = SonarDataBuffer::new(starboard_data, dimensions);
-
-    let mut sonar_renderer = None::<SonarRenderer>;
+    let mut sonar_renderer = None::<render::Renderer>;
 
     event_loop.run(move |event, _event_loop, control_flow| match event {
         Event::WindowEvent {
@@ -60,21 +59,27 @@ fn run(
             if render_state.window.id() != window_id {
                 return;
             }
-            match event {
-                WindowEvent::CloseRequested => control_flow.set_exit(),
-                WindowEvent::KeyboardInput { input, .. } => {
-                    if input.state == ElementState::Pressed {
-                        match input.virtual_keycode {
-                            Some(VirtualKeyCode::Escape) => control_flow.set_exit(),
-                            _ => {}
+            if !app.input(event) {
+                match event {
+                    WindowEvent::CloseRequested => control_flow.set_exit(),
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        if input.state == ElementState::Pressed {
+                            match input.virtual_keycode {
+                                Some(VirtualKeyCode::Escape) => control_flow.set_exit(),
+                                _ => {}
+                            }
                         }
                     }
+                    WindowEvent::Resized(size) => {
+                        render_cx.resize_surface(
+                            &mut render_state.surface,
+                            size.width,
+                            size.height,
+                        );
+                        render_state.window.request_redraw();
+                    }
+                    _ => {}
                 }
-                WindowEvent::Resized(size) => {
-                    render_cx.resize_surface(&mut render_state.surface, size.width, size.height);
-                    render_state.window.request_redraw();
-                }
-                _ => {}
             }
         }
         Event::MainEventsCleared => {
@@ -88,6 +93,9 @@ fn run(
             let width = render_state.surface.config.width;
             let height = render_state.surface.config.height;
             let device_handle = &render_cx.devices[render_state.surface.dev_id];
+
+            // Should we update this every frame?
+            app.update(&device_handle.queue);
 
             // Build the vello Scene that we want to display over the sonar data
             let mut builder = SceneBuilder::for_fragment(&mut fragment);
@@ -166,11 +174,10 @@ fn run(
                 // Render the sonar data and the vello Scene to the surface texture
                 sonar_renderer
                     .render(
+                        &app,
                         &device_handle.device,
                         &device_handle.queue,
                         &surface_texture,
-                        &port_data_buffer,
-                        &starboard_data_buffer,
                     )
                     .unwrap();
             };
@@ -221,11 +228,10 @@ fn run(
                     let queue = &render_cx.devices[id].queue;
 
                     // I think we should initialize the sonar data buffers here
-                    port_data_buffer.initialize(device, queue);
-                    starboard_data_buffer.initialize(device, queue);
+                    app.initialize(device, queue);
 
                     // And initialize the sonar renderer
-                    sonar_renderer.get_or_insert(SonarRenderer::new(
+                    sonar_renderer.get_or_insert(render::Renderer::new(
                         device,
                         &render_state.surface.format,
                         texture_dimensions,
