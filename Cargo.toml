@@ -19,11 +19,14 @@ license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[workspace.dependencies]
+clap = { version = "4.1.6", features = ["derive"] }
+
 [dependencies]
 binrw = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 time = { version ="0.3", features =["macros","serde","formatting","parsing"] }
-clap = { version = "4.1.6", features = ["derive"] }
+clap = { workspace = true }
 apache-avro = { version = "0.14.0", features = ["derive"] }
 tui = "0.19"
 crossterm = "0.25"
