@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             SonarDataRecord::Ping(Ping { data, .. }) => Some(data),
             _ => None,
         })
-        .tuples::<(_, _)>()
+        .tuples()
         .unzip();
 
     let data_len = port_data[0].len();
