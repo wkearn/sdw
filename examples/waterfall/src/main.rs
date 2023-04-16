@@ -3,9 +3,17 @@ use sdw::{
     parser::jsf,
 };
 
+use waterfall::run;
+
 use itertools::Itertools;
 
+use vello::util::RenderContext;
+
+use winit::event_loop::EventLoop;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+    
     let jsf =
         jsf::File::open("/home/wkearn/Documents/projects/SDW/assets/HE501/HE501_Hydro1_007.jsf")?;
 
@@ -32,15 +40,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_iter()
         .flat_map(|x| x.into_iter().chain(padding.clone()))
         .collect();
+   
+    // The event loop comes from winit
+    let event_loop = EventLoop::new();
 
-    /*
-        pollster::block_on(waterfall::run(
-           port_data,
-            starboard_data,
-            padded_len,
-            row_max,
-    ));
-        */
-    waterfall::vello::main(port_data, starboard_data, padded_len, row_max);
+    // The render context comes from vello::util::RenderContext
+    // It basically wraps all the necessary wgpu rendering state
+    let render_cx = RenderContext::new().unwrap();
+
+    // This is our run function (see above)
+    run(
+        event_loop,
+        render_cx,
+        port_data,
+        starboard_data,
+        padded_len,
+        row_max,
+    );
+
     Ok(())
 }
