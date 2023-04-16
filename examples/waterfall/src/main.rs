@@ -13,7 +13,7 @@ use winit::event_loop::EventLoop;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
-    
+
     let jsf =
         jsf::File::open("/home/wkearn/Documents/projects/SDW/assets/HE501/HE501_Hydro1_007.jsf")?;
 
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_iter()
         .flat_map(|x| x.into_iter().chain(padding.clone()))
         .collect();
-   
+
     // The event loop comes from winit
     let event_loop = EventLoop::new();
 
