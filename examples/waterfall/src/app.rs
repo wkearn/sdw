@@ -93,12 +93,5 @@ impl App {
         // Update the index
         self.idx = new_row_idx as usize;
         self.delta = 0;
-
-        // Update the viewport
-        // This is should be a renderer operation
-        // Let the renderer extract self.idx from App and then update the viewport
-        // as needed
-        //let a = (self.idx as f32) / 256.0;
-        //queue.write_buffer(&self.viewport_buffer,0,bytemuck::cast_slice(&[0.0f32,a]));
     }
 }
