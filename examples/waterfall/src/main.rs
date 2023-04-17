@@ -39,15 +39,15 @@ impl Args {
 
         let row_max = port_data.len();
 
-        let padded_len = data_len + padding.len();
+        let padded_len = std::cmp::min(8192,data_len + padding.len());
 
         let port_data: Vec<f32> = port_data
             .into_iter()
-            .flat_map(|x| x.into_iter().chain(padding.clone()))
+            .flat_map(|x| x.into_iter().chain(padding.clone()).take(8192))
             .collect();
         let starboard_data: Vec<f32> = starboard_data
             .into_iter()
-            .flat_map(|x| x.into_iter().chain(padding.clone()))
+            .flat_map(|x| x.into_iter().chain(padding.clone()).take(8192))
             .collect();
 
         // The event loop comes from winit
