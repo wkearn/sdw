@@ -3,6 +3,7 @@ use clap::Parser;
 
 pub mod avro;
 pub mod count;
+pub mod info;
 pub mod list;
 
 #[derive(clap::Subcommand, Debug)]
@@ -22,6 +23,9 @@ enum Action {
         output: std::path::PathBuf,
         #[arg(short = 'z', long)]
         compress: bool,
+    },
+    Info {
+        path: std::path::PathBuf,
     },
 }
 
@@ -50,6 +54,7 @@ impl Args {
             } => {
                 avro::avro(path, output, compress)?;
             }
+            Action::Info { path } => info::info(path)?,
         };
         Ok(())
     }
