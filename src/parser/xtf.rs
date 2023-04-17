@@ -8,7 +8,8 @@ use std::io;
 #[derive(Debug, PartialEq)]
 pub struct FileHeader {
     system_type: u8,
-    #[br(count = 8,try_map = String::from_utf8)] recording_program_name: String,
+    #[br(count = 8,try_map = String::from_utf8)]
+    recording_program_name: String,
     #[br(count = 8,try_map = String::from_utf8)]
     recording_program_version: String,
     #[br(count = 16,try_map = String::from_utf8)]
@@ -287,19 +288,19 @@ where
 
 impl<T> io::Read for File<T>
 where
-    T: io::Read + io::Seek
+    T: io::Read + io::Seek,
 {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-	self.reader.read(buf)
+        self.reader.read(buf)
     }
 }
 
 impl<T> io::Seek for File<T>
 where
-    T: io::Read + io::Seek
+    T: io::Read + io::Seek,
 {
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
-	self.reader.seek(pos)
+        self.reader.seek(pos)
     }
 }
 

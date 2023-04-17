@@ -22,10 +22,10 @@ impl Args {
     pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         let args = Args::parse();
 
-	log::debug!("Opening {:?}",args.path);
-	
+        log::debug!("Opening {:?}", args.path);
+
         let jsf = jsf::File::open(args.path)?;
-	
+
         let (port_data, starboard_data): (Vec<_>, Vec<_>) = jsf
             .filter_map(|msg| match SonarDataRecord::from(msg.unwrap()) {
                 SonarDataRecord::Ping(Ping { data, .. }) => Some(data),
@@ -75,6 +75,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
     Args::run()?;
-    
+
     Ok(())
 }

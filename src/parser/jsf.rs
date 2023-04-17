@@ -186,7 +186,7 @@ impl SonarData {
 
     /// Return the sonar data trace
     pub fn trace(&self) -> Vec<f32> {
-	let scale: f32 = 2.0f32.powi(-(i32::from(self.weighting_factor)));
+        let scale: f32 = 2.0f32.powi(-(i32::from(self.weighting_factor)));
         self.trace.iter().map(|&x| f32::from(x) * scale).collect()
     }
 }
@@ -438,19 +438,19 @@ where
 
 impl<T> io::Read for File<T>
 where
-    T: io::Read + io::Seek
+    T: io::Read + io::Seek,
 {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-	self.reader.read(buf)
+        self.reader.read(buf)
     }
 }
 
 impl<T> io::Seek for File<T>
 where
-    T: io::Read + io::Seek
+    T: io::Read + io::Seek,
 {
     fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
-	self.reader.seek(pos)
+        self.reader.seek(pos)
     }
 }
 

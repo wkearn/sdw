@@ -3,7 +3,7 @@
 use crate::model::{Channel, Course, Orientation, Ping, Position, SonarDataRecord};
 use crate::parser::jsf;
 use binrw::io::BufReader;
-use std::collections::{HashSet};
+use std::collections::HashSet;
 use time::OffsetDateTime;
 
 /// Print info about a sonar file
