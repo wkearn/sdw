@@ -39,7 +39,7 @@ impl Args {
 
         let row_max = port_data.len();
 
-        let padded_len = std::cmp::min(8192,data_len + padding.len());
+        let padded_len = std::cmp::min(8192, data_len + padding.len());
 
         let port_data: Vec<f32> = port_data
             .into_iter()
