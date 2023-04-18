@@ -18,6 +18,7 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
     let mut other_channel_count = 0;
     let mut data_lengths = HashSet::new();
     let mut sampling_intervals = Vec::new();
+    let mut frequencies = Vec::new();
     let mut start_date = OffsetDateTime::now_utc();
     let mut end_date = OffsetDateTime::UNIX_EPOCH;
 
@@ -29,6 +30,7 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
                 channel,
                 data,
                 sampling_interval,
+		frequency,		
                 ..
             }) => {
                 match channel {
@@ -42,7 +44,7 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
                 } else if timestamp > end_date {
                     end_date = timestamp;
                 }
-
+		frequencies.push(frequency);
                 data_lengths.insert(data.len());
                 sampling_intervals.push(sampling_interval);
             }
@@ -108,6 +110,13 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
     sampling_intervals.dedup();
     for interval in sampling_intervals {
         println!("\t{}", interval);
+    }
+
+    println!("Unique frequencies:");
+    frequencies.sort_by(|a, b| a.total_cmp(&b));
+    frequencies.dedup();
+    for f in frequencies {
+        println!("\t{} kHz", f/1.0e3);
     }
 
     Ok(())
