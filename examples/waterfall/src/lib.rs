@@ -93,6 +93,9 @@ pub fn run(
             let height = render_state.surface.config.height;
             let device_handle = &render_cx.devices[render_state.surface.dev_id];
 
+	    let widthf64 = f64::from(width);
+	    let heightf64 = f64::from(height);
+
             // Should we update this every frame?
             app.update(&device_handle.queue);
 
@@ -102,17 +105,17 @@ pub fn run(
             // This is one of the vello test_scenes
             use vello::kurbo::PathEl::{self, *};
             let missing_movetos = [
-                LineTo((100.0, 100.0).into()),
-                LineTo((100.0, 200.0).into()),
+                LineTo((0.1 * widthf64, 0.1 * heightf64).into()),
+                LineTo((0.1 * widthf64, 0.2 * heightf64).into()),
                 ClosePath,
-                LineTo((0.0, 400.0).into()),
-                LineTo((100.0, 400.0).into()),
+                LineTo((0.0, 0.4*heightf64).into()),
+                LineTo((0.1*widthf64, 0.2*heightf64).into()),
             ];
-            let only_movetos = [MoveTo((0.0, 0.0).into()), MoveTo((100.0, 100.0).into())];
+            let only_movetos = [MoveTo((0.0, 0.0).into()), MoveTo((0.1*widthf64, 0.1*heightf64).into())];
             let empty: [PathEl; 0] = [];
             builder.fill(
                 Fill::NonZero,
-                Affine::translate((100.0, 100.0)),
+                Affine::translate((0.1*widthf64, 0.1*heightf64)),
                 Color::rgb8(0, 0, 255),
                 None,
                 &missing_movetos,
@@ -133,7 +136,7 @@ pub fn run(
             );
             builder.stroke(
                 &Stroke::new(8.0),
-                Affine::translate((100.0, 100.0)),
+                Affine::translate((0.1*widthf64, 0.1*heightf64)),
                 Color::rgb8(0, 255, 255),
                 None,
                 &missing_movetos,
