@@ -213,6 +213,8 @@ pub fn run(
                     renderers[id].get_or_insert_with(|| {
                         log::debug!("Creating renderer {id}");
                         log::debug!("Format {:?}", render_state.surface.format);
+			let device_features = render_cx.devices[id].device.features();
+			log::debug!("Device features: {device_features:?}");
                         Renderer::new(
                             &render_cx.devices[id].device,
                             &RendererOptions {
