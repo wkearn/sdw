@@ -39,12 +39,12 @@ fn vs_main(@builtin(vertex_index) idx: u32,
   if instance == 0u {
       // Starboard instance
       out.tex_coords = tex_coords;
-      out.clip_position = vec4<f32>(vertex,0.0,1.0);
+      out.clip_position = vec4<f32>(vec2(1.0,0.75) * vertex + vec2(0.0,0.25),0.0,1.0);
       out.instance = 0u;
     } else if instance == 1u {
     // Port instance
     out.tex_coords = vec2<f32>(1.0 - tex_coords.x,tex_coords.y);
-    out.clip_position = vec4<f32>(vertex - vec2<f32>(1.0,0.0),0.0,1.0);
+    out.clip_position = vec4<f32>(vec2(1.0,0.75) * vertex + vec2<f32>(-1.0,0.25),0.0,1.0);
     out.instance = 1u;
     } else {
     out.tex_coords = vec2<f32>(0.0);
