@@ -7,6 +7,7 @@ pub struct App {
     delta: i32,
     pub port_data_buffer: SonarDataBuffer,
     pub starboard_data_buffer: SonarDataBuffer,
+    col_max: usize,
     row_max: usize,
 }
 
@@ -26,6 +27,7 @@ impl App {
             delta: 0,
             port_data_buffer,
             starboard_data_buffer,
+            col_max: padded_len,
             row_max,
         }
     }
@@ -93,5 +95,14 @@ impl App {
         // Update the index
         self.idx = new_row_idx as usize;
         self.delta = 0;
+    }
+
+    pub fn plot_pings(&self) -> (&[f32], &[f32]) {
+	let dims = (self.col_max,self.row_max);
+	let idx = self.idx;
+        (
+            &self.starboard_data_buffer.slice((idx * dims.0)..(idx + 1) * dims.0),
+            &self.port_data_buffer.slice((idx * dims.0)..(idx + 1) * dims.0),
+        )
     }
 }

@@ -93,8 +93,8 @@ pub fn run(
             let height = render_state.surface.config.height;
             let device_handle = &render_cx.devices[render_state.surface.dev_id];
 
-	    let widthf64 = f64::from(width);
-	    let heightf64 = f64::from(height);
+            let widthf64 = f64::from(width);
+            let heightf64 = f64::from(height);
 
             // Should we update this every frame?
             app.update(&device_handle.queue);
@@ -102,44 +102,77 @@ pub fn run(
             // Build the vello Scene that we want to display over the sonar data
             let mut builder = SceneBuilder::for_fragment(&mut fragment);
 
-            // This is one of the vello test_scenes
-            use vello::kurbo::PathEl::{self, *};
-            let missing_movetos = [
-                LineTo((0.1 * widthf64, 0.1 * heightf64).into()),
-                LineTo((0.1 * widthf64, 0.2 * heightf64).into()),
-                ClosePath,
-                LineTo((0.0, 0.4*heightf64).into()),
-                LineTo((0.1*widthf64, 0.2*heightf64).into()),
-            ];
-            let only_movetos = [MoveTo((0.0, 0.0).into()), MoveTo((0.1*widthf64, 0.1*heightf64).into())];
-            let empty: [PathEl; 0] = [];
+            let starboard_plot_transform = Affine::map_unit_square(vello::kurbo::Rect::new(
+                widthf64 / 2.0,
+                heightf64,
+                widthf64,
+                3.0 * heightf64 / 4.0,
+            ));
+
             builder.fill(
                 Fill::NonZero,
-                Affine::translate((0.1*widthf64, 0.1*heightf64)),
-                Color::rgb8(0, 0, 255),
+                starboard_plot_transform,
+                Color::rgb8(255, 255, 255),
                 None,
-                &missing_movetos,
+                &vello::kurbo::Rect::new(0.0, 0.0, 1.0, 1.0),
             );
+
+            let port_plot_transform = Affine::map_unit_square(vello::kurbo::Rect::new(
+                widthf64 / 2.0,
+                heightf64,
+                0.0,
+                3.0 * heightf64 / 4.0,
+            ));
+
             builder.fill(
                 Fill::NonZero,
-                Affine::IDENTITY,
-                Color::rgb8(0, 0, 255),
+                port_plot_transform,
+                Color::rgb8(255, 255, 255),
                 None,
-                &empty,
+                &vello::kurbo::Rect::new(0.0, 0.0, 1.0, 1.0),
             );
-            builder.fill(
-                Fill::NonZero,
-                Affine::IDENTITY,
-                Color::rgb8(0, 0, 255),
-                None,
-                &only_movetos,
-            );
+
+            let (starboard_ping_data, port_ping_data) = app.plot_pings();
+
+            let ping_max = starboard_ping_data
+                .iter()
+                .fold(0.0f32, |acc, &y| acc.max(y));
+            let ping_max = port_ping_data.iter().fold(ping_max, |acc, &y| acc.max(y));
+
+            let data_len = starboard_ping_data.len() as f64;
+
+            let starboard_ping_plot: vello::kurbo::BezPath = starboard_ping_data
+                .iter()
+                .enumerate()
+                .map(|(i, &y)| {
+                    let x = (i as f64) / data_len;
+                    vello::kurbo::PathEl::LineTo((x, f64::from(y / ping_max)).into())
+                })
+                .collect();
+
+            let port_ping_plot: vello::kurbo::BezPath = port_ping_data
+                .iter()
+                .enumerate()
+                .map(|(i, &y)| {
+                    let x = (i as f64) / data_len;
+                    vello::kurbo::PathEl::LineTo((x, f64::from(y / ping_max)).into())
+                })
+                .collect();
+
             builder.stroke(
-                &Stroke::new(8.0),
-                Affine::translate((0.1*widthf64, 0.1*heightf64)),
-                Color::rgb8(0, 255, 255),
+                &Stroke::new(0.001),
+                starboard_plot_transform,
+                Color::rgb8(0, 0, 0),
                 None,
-                &missing_movetos,
+                &starboard_ping_plot,
+            );
+
+            builder.stroke(
+                &Stroke::new(0.001),
+                port_plot_transform,
+                Color::rgb8(0, 0, 0),
+                None,
+                &port_ping_plot,
             );
 
             // Render the vello scene to a texture
@@ -216,8 +249,8 @@ pub fn run(
                     renderers[id].get_or_insert_with(|| {
                         log::debug!("Creating renderer {id}");
                         log::debug!("Format {:?}", render_state.surface.format);
-			let device_features = render_cx.devices[id].device.features();
-			log::debug!("Device features: {device_features:?}");
+                        let device_features = render_cx.devices[id].device.features();
+                        log::debug!("Device features: {device_features:?}");
                         Renderer::new(
                             &render_cx.devices[id].device,
                             &RendererOptions {

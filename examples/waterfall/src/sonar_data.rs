@@ -93,4 +93,8 @@ impl SonarDataBuffer {
             );
         }
     }
+
+    pub fn slice(&self, range: std::ops::Range<usize>) -> &[f32] {
+        &self.data[range]
+    }
 }
