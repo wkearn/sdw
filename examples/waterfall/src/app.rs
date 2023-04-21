@@ -105,4 +105,8 @@ impl App {
             &self.port_data_buffer.slice((idx * dims.0)..(idx + 1) * dims.0),
         )
     }
+
+    pub fn plot_idx(&self) -> f64 {
+	(self.idx as f64) / (self.row_max as f64)
+    }
 }
