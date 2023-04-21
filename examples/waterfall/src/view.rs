@@ -37,7 +37,6 @@ impl Size {
 }
 
 pub trait View {
-    fn measure(&self, size: Size) -> Size;
     fn layout(&self);
     fn draw(&self, cx: &mut RenderContext);
 }
@@ -57,9 +56,6 @@ where
     T: View,
     B: View,
 {
-    fn measure(&self, size: Size) -> Size {
-        size
-    }
     fn layout(&self) {}
     fn draw(&self, cx: &mut RenderContext) {
         self.top.draw(cx);
@@ -81,9 +77,6 @@ where
     L: View,
     R: View,
 {
-    fn measure(&self, size: Size) -> Size {
-        size
-    }
     fn layout(&self) {}
     fn draw(&self, cx: &mut RenderContext) {
         self.left.draw(cx);
@@ -121,9 +114,6 @@ impl<'a> PingPlot<'a> {
 }
 
 impl<'a> View for PingPlot<'a> {
-    fn measure(&self, size: Size) -> Size {
-        size
-    }
 
     fn layout(&self) {}
 
@@ -215,9 +205,6 @@ impl<'a> View for PingPlot<'a> {
 struct WaterfallPlot {}
 
 impl View for WaterfallPlot {
-    fn measure(&self, size: Size) -> Size {
-        size
-    }
 
     fn layout(&self) {}
 
@@ -257,9 +244,6 @@ impl ScrollBar {
 }
 
 impl View for ScrollBar {
-    fn measure(&self, size: Size) -> Size {
-        size
-    }
 
     fn layout(&self) {}
 
