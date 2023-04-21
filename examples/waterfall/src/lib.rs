@@ -4,6 +4,7 @@ pub mod sonar_data;
 pub mod view;
 
 use app::App;
+use view::View;
 
 use winit::{
     event::*,
@@ -101,95 +102,37 @@ pub fn run(
             app.update(&device_handle.queue);
 
             // Build the vello Scene that we want to display over the sonar data
-            let mut builder = SceneBuilder::for_fragment(&mut fragment);
+
+	    let builder = SceneBuilder::for_scene(&mut scene);
+	    let mut cx = view::RenderContext::new(builder);	    
 
             // Plot idx indicator
             let idx_plot = app.plot_idx();
 
-            let idx_point = (widthf64 - 10.0, 3.0 * heightf64 / 4.0 * (1.0 - idx_plot));
-
-            builder.fill(
-                Fill::NonZero,
-                Affine::IDENTITY,
-                Color::rgb8(200, 200, 200),
-                None,
-                &vello::kurbo::Circle::new(idx_point, 10.0),
+            let scroll_bar = view::ScrollBar::new(
+                idx_plot,
+                10.0,
+		Color::rgb8(0, 0, 0),
+		Color::rgb8(200, 200, 200),
+                view::Point::new(widthf64 - 20.0, 0.0),
+                view::Size::new(20.0, 3.0 * heightf64 / 4.0),
             );
+
+	    scroll_bar.draw(&mut cx);
 
             // Plot pings
-
-            let starboard_plot_transform = Affine::map_unit_square(vello::kurbo::Rect::new(
-                widthf64 / 2.0,
-                heightf64,
-                widthf64,
-                3.0 * heightf64 / 4.0,
-            ));
-
-            builder.fill(
-                Fill::NonZero,
-                starboard_plot_transform,
-                Color::rgb8(255, 255, 255),
-                None,
-                &vello::kurbo::Rect::new(0.0, 0.0, 1.0, 1.0),
-            );
-
-            let port_plot_transform = Affine::map_unit_square(vello::kurbo::Rect::new(
-                widthf64 / 2.0,
-                heightf64,
-                0.0,
-                3.0 * heightf64 / 4.0,
-            ));
-
-            builder.fill(
-                Fill::NonZero,
-                port_plot_transform,
-                Color::rgb8(255, 255, 255),
-                None,
-                &vello::kurbo::Rect::new(0.0, 0.0, 1.0, 1.0),
-            );
-
             let (starboard_ping_data, port_ping_data) = app.plot_pings();
 
-            let ping_max = starboard_ping_data
-                .iter()
-                .fold(0.0f32, |acc, &y| acc.max(y));
-            let ping_max = port_ping_data.iter().fold(ping_max, |acc, &y| acc.max(y));
-
-            let data_len = starboard_ping_data.len() as f64;
-
-            let starboard_ping_plot: vello::kurbo::BezPath = starboard_ping_data
-                .iter()
-                .enumerate()
-                .map(|(i, &y)| {
-                    let x = (i as f64) / data_len;
-                    vello::kurbo::PathEl::LineTo((x, f64::from(y / ping_max)).into())
-                })
-                .collect();
-
-            let port_ping_plot: vello::kurbo::BezPath = port_ping_data
-                .iter()
-                .enumerate()
-                .map(|(i, &y)| {
-                    let x = (i as f64) / data_len;
-                    vello::kurbo::PathEl::LineTo((x, f64::from(y / ping_max)).into())
-                })
-                .collect();
-
-            builder.stroke(
-                &Stroke::new(0.001),
-                starboard_plot_transform,
-                Color::rgb8(0, 0, 0),
-                None,
-                &starboard_ping_plot,
+            let ping_plot = view::PingPlot::new(
+                starboard_ping_data,
+                port_ping_data,
+		Color::rgb8(255, 255, 255),
+                Color::rgb8(0, 0, 0),                
+                view::Point::new(0.0, 3.0 * heightf64 / 4.0),
+                view::Size::new(widthf64, heightf64 / 4.0),
             );
 
-            builder.stroke(
-                &Stroke::new(0.001),
-                port_plot_transform,
-                Color::rgb8(0, 0, 0),
-                None,
-                &port_ping_plot,
-            );
+	    ping_plot.draw(&mut cx);
 
             // Render the vello scene to a texture
             let render_params = vello::RenderParams {
@@ -197,9 +140,7 @@ pub fn run(
                 width,
                 height,
             };
-            let mut builder = SceneBuilder::for_scene(&mut scene);
-            builder.append(&fragment, Some(transform));
-
+            
             let surface_texture = render_state
                 .surface
                 .surface
