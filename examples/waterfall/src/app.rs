@@ -98,15 +98,19 @@ impl App {
     }
 
     pub fn plot_pings(&self) -> (&[f32], &[f32]) {
-	let dims = (self.col_max,self.row_max);
-	let idx = self.idx;
+        let dims = (self.col_max, self.row_max);
+        let idx = self.idx;
         (
-            &self.starboard_data_buffer.slice((idx * dims.0)..(idx + 1) * dims.0),
-            &self.port_data_buffer.slice((idx * dims.0)..(idx + 1) * dims.0),
+            &self
+                .starboard_data_buffer
+                .slice((idx * dims.0)..(idx + 1) * dims.0),
+            &self
+                .port_data_buffer
+                .slice((idx * dims.0)..(idx + 1) * dims.0),
         )
     }
 
     pub fn plot_idx(&self) -> f64 {
-	(self.idx as f64) / (self.row_max as f64)
+        (self.idx as f64) / (self.row_max as f64)
     }
 }
