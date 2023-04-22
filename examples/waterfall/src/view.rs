@@ -10,7 +10,7 @@ pub struct RenderContext<'a> {
 
 impl<'a> RenderContext<'a> {
     pub fn new(builder: SceneBuilder<'a>) -> Self {
-	Self {builder}
+        Self { builder }
     }
 }
 
@@ -97,7 +97,7 @@ impl<'a> PingPlot<'a> {
     pub fn new(
         starboard_data: &'a [f32],
         port_data: &'a [f32],
-	background_color: Color,
+        background_color: Color,
         foreground_color: Color,
         origin: Point,
         size: Size,
@@ -114,7 +114,6 @@ impl<'a> PingPlot<'a> {
 }
 
 impl<'a> View for PingPlot<'a> {
-
     fn layout(&self) {}
 
     fn draw(&self, cx: &mut RenderContext) {
@@ -205,7 +204,6 @@ impl<'a> View for PingPlot<'a> {
 struct WaterfallPlot {}
 
 impl View for WaterfallPlot {
-
     fn layout(&self) {}
 
     fn draw(&self, cx: &mut RenderContext) {
@@ -216,35 +214,34 @@ impl View for WaterfallPlot {
 
 pub struct ScrollBar {
     location: f64,
-    radius: f64,
     background_color: Color,
     foreground_color: Color,
     origin: Point,
     size: Size,
+    row_max: usize,
 }
 
 impl ScrollBar {
     pub fn new(
         location: f64,
-        radius: f64,
         background_color: Color,
         foreground_color: Color,
         origin: Point,
         size: Size,
+	row_max: usize,
     ) -> Self {
         Self {
             location,
-            radius,
             background_color,
             foreground_color,
             origin,
             size,
+	    row_max
         }
     }
 }
 
 impl View for ScrollBar {
-
     fn layout(&self) {}
 
     fn draw(&self, cx: &mut RenderContext) {
@@ -266,17 +263,23 @@ impl View for ScrollBar {
             Affine::IDENTITY,
             self.background_color,
             None,
-            &Rect::new(origin.x, origin.y, origin.x + size.width, origin.y + size.height),
+            &Rect::new(
+                origin.x,
+                origin.y,
+                origin.x + size.width,
+                origin.y + size.height,
+            ),
         );
 
-        let idx_point = (origin.x + self.radius, origin.y + size.height * (1.0 - self.location));
+        let pos = (origin.x, origin.y + size.height * (1.0 - self.location));
+        let slider_height = 1024.0 * (size.height / (self.row_max as f64));
 
         builder.fill(
             Fill::NonZero,
             Affine::IDENTITY,
             self.foreground_color,
             None,
-            &Circle::new(idx_point, self.radius),
+            &Rect::new(pos.0, pos.1, pos.0 + size.width, pos.1 - slider_height),
         );
 
         // Append our fragment to the scene
