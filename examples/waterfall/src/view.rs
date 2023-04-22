@@ -71,8 +71,6 @@ impl View for Box {
 
         self.actual_size = size;
 
-	log::debug!("Box size: {:?}",self.actual_size);
-
         self.actual_size.to_owned()
     }
 
@@ -147,8 +145,6 @@ impl<V: View> View for Container<V> {
 
         self.actual_size = size;
         self.child_pos = child_pos;
-
-	log::debug!("Container size: {:?}",self.actual_size);
 
         self.actual_size.to_owned()
     }
