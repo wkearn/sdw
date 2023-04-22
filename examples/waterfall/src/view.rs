@@ -46,6 +46,7 @@ pub trait View {
 }
 
 pub struct Box {
+    title: String,
     foreground_color: Color,
     nominal_size: Size,
     actual_size: Size,

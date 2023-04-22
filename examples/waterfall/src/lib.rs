@@ -134,7 +134,7 @@ pub fn run(
 
             ping_plot.draw(&view::Point::new(0.0, 3.0 * heightf64 / 4.0), &mut cx);
 
-            let test_box = view::Box::new(Color::RED, view::Size::new(100.0, 100.0));
+            let test_box = view::Box::new("Box 1".to_string(),Color::RED, view::Size::new(100.0, 100.0));
             let container = view::Container::new(
                 test_box,
                 Color::GREEN,
@@ -142,11 +142,11 @@ pub fn run(
                 view::Size::new(200.0, 200.0),
             );
 
-            let test_box2 = view::Box::new(Color::BLUE, view::Size::new(50.0, 100.0));
+            let test_box2 = view::Box::new("Box 2".to_string(),Color::BLUE, view::Size::new(50.0, 100.0));
 
             let vstack = view::VerticalStack::new(container, test_box2, Color::CORAL);
 
-	    let test_box3 = view::Box::new(Color::ORANGE, view::Size::new(75.0,135.0));
+	    let test_box3 = view::Box::new("Box 3".to_string(),Color::ORANGE, view::Size::new(75.0,135.0));
 	    let mut hstack = view::HorizontalStack::new(vstack,test_box3,Color::AQUAMARINE);
 
             let screen_size = view::Size::new(widthf64, heightf64);
