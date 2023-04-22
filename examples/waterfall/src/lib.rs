@@ -142,15 +142,17 @@ pub fn run(
                 view::Size::new(200.0, 200.0),
             );
 
-	    let test_box2 = view::Box::new(Color::BLUE,view::Size::new(200.0,50.0));
+            let test_box2 = view::Box::new(Color::BLUE, view::Size::new(50.0, 100.0));
 
-	    let mut vstack = view::VerticalStack::new(container,test_box2,Color::CORAL);
-	    
+            let vstack = view::VerticalStack::new(container, test_box2, Color::CORAL);
+
+	    let test_box3 = view::Box::new(Color::ORANGE, view::Size::new(75.0,135.0));
+	    let mut hstack = view::HorizontalStack::new(vstack,test_box3,Color::AQUAMARINE);
 
             let screen_size = view::Size::new(widthf64, heightf64);
             let zero_size = view::Size::new(0.0, 0.0);
-            vstack.layout(&zero_size, &screen_size);
-            vstack.draw(&view::Point::new(widthf64 / 2.0, heightf64 / 2.0), &mut cx);
+            hstack.layout(&zero_size, &screen_size);
+            hstack.draw(&view::Point::new(widthf64 / 2.0, heightf64 / 2.0), &mut cx);
 
             // Render the vello scene to a texture
             let render_params = vello::RenderParams {

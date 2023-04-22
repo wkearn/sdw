@@ -186,19 +186,22 @@ where
     bottom: B,
     bottom_pos: Point,
     background_color: Color,
-    actual_size: Size
+    actual_size: Size,
 }
 
-impl<T: View, B: View> VerticalStack<T,B> {
+impl<T: View, B: View> VerticalStack<T, B> {
     pub fn new(top: T, bottom: B, background_color: Color) -> Self {
-	Self {
-	    top,
-	    top_pos: Point {x: 0.0, y: 0.0},
-	    bottom,
-	    bottom_pos: Point {x: 0.0, y: 0.0},
-	    background_color,
-	    actual_size: Size {width: 0.0, height: 0.0}
-	}
+        Self {
+            top,
+            top_pos: Point { x: 0.0, y: 0.0 },
+            bottom,
+            bottom_pos: Point { x: 0.0, y: 0.0 },
+            background_color,
+            actual_size: Size {
+                width: 0.0,
+                height: 0.0,
+            },
+        }
     }
 }
 
@@ -207,33 +210,44 @@ where
     T: View,
     B: View,
 {
-
     fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
-	let (min_width, min_height) = (min_size.width, min_size.height);
+        let (min_width, min_height) = (min_size.width, min_size.height);
         let (max_width, max_height) = (max_size.width, max_size.height);
 
-	// Figure out how big the top element wants to be
-	let top_size = self.top.layout(min_size,max_size);
+        // Figure out how big the top element wants to be
+        let top_size = self.top.layout(min_size, max_size);
 
-	let bottom_min_size = Size{ width: min_width, height: min_height - top_size.height};
-	let bottom_max_size = Size{ width: max_width, height: max_height - top_size.height};
-	
-	let bottom_size = self.bottom.layout(&bottom_min_size,&bottom_max_size);
+        let bottom_min_size = Size {
+            width: min_width,
+            height: min_height - top_size.height,
+        };
+        let bottom_max_size = Size {
+            width: max_width,
+            height: max_height - top_size.height,
+        };
 
-	let size = Size { width: top_size.width.max(bottom_size.width),
-			  height: top_size.height + bottom_size.height};
+        let bottom_size = self.bottom.layout(&bottom_min_size, &bottom_max_size);
 
-	
-	self.actual_size = size;
-	self.top_pos = Point{ x: size.width / 2.0 - top_size.width / 2.0, y: 0.0};
-	self.bottom_pos = Point{ x: size.width / 2.0 - bottom_size.width / 2.0, y: top_size.height};
+        let size = Size {
+            width: top_size.width.max(bottom_size.width),
+            height: top_size.height + bottom_size.height,
+        };
 
-	size.to_owned()
+        self.actual_size = size;
+        self.top_pos = Point {
+            x: size.width / 2.0 - top_size.width / 2.0,
+            y: 0.0,
+        };
+        self.bottom_pos = Point {
+            x: size.width / 2.0 - bottom_size.width / 2.0,
+            y: top_size.height,
+        };
+
+        size.to_owned()
     }
-    
-    fn draw(&self, pos: &Point, cx: &mut RenderContext) {
 
-	let mut fragment = SceneFragment::new();
+    fn draw(&self, pos: &Point, cx: &mut RenderContext) {
+        let mut fragment = SceneFragment::new();
         let mut builder = SceneBuilder::for_fragment(&mut fragment);
 
         builder.fill(
@@ -250,15 +264,14 @@ where
         );
 
         cx.builder.append(&fragment, Some(Affine::IDENTITY));
-	
-	
-	let top_pos = Point {
+
+        let top_pos = Point {
             x: pos.x + self.top_pos.x,
             y: pos.y + self.top_pos.y,
         };
         self.top.draw(&top_pos, cx);
 
-	let bottom_pos = Point {
+        let bottom_pos = Point {
             x: pos.x + self.bottom_pos.x,
             y: pos.y + self.bottom_pos.y,
         };
@@ -266,13 +279,30 @@ where
     }
 }
 
-struct HorizontalStack<L, R>
+pub struct HorizontalStack<L, R>
 where
     L: View,
     R: View,
 {
     left: L,
+    left_pos: Point,
     right: R,
+    right_pos: Point,
+    background_color: Color,
+    actual_size: Size,
+}
+
+impl<L: View,R: View> HorizontalStack<L,R> {
+    pub fn new(left: L, right: R, background_color: Color) -> Self {
+	Self {
+	    left,
+	    left_pos: Point {x: 0.0, y: 0.0},
+	    right,
+	    right_pos: Point {x: 0.0, y: 0.0},
+	    background_color,
+	    actual_size: Size { width: 0.0, height: 0.0}
+	}
+    }
 }
 
 impl<L, R> View for HorizontalStack<L, R>
@@ -280,9 +310,74 @@ where
     L: View,
     R: View,
 {
+    fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
+        let (min_width, min_height) = (min_size.width, min_size.height);
+        let (max_width, max_height) = (max_size.width, max_size.height);
+
+        let left_size = self.left.layout(min_size, max_size);
+
+        let right_min_size = Size {
+            width: min_width - left_size.width,
+            height: min_height,
+        };
+        let right_max_size = Size {
+            width: max_width - left_size.width,
+            height: max_height,
+        };
+
+        let right_size = self.right.layout(&right_min_size, &right_max_size);
+
+        let size = Size {
+            width: left_size.width + right_size.width,
+            height: left_size.height.max(right_size.height),
+        };
+
+        self.actual_size = size;
+
+        self.left_pos = Point {
+            x: 0.0,
+            y: size.height / 2.0 - left_size.height / 2.0,
+        };
+        self.right_pos = Point {
+            x: left_size.width,
+            y: size.height / 2.0 - right_size.height / 2.0,
+        };
+
+	size.to_owned()
+    }
+
     fn draw(&self, pos: &Point, cx: &mut RenderContext) {
-        self.left.draw(pos, cx);
-        self.right.draw(pos, cx);
+        let mut fragment = SceneFragment::new();
+        let mut builder = SceneBuilder::for_fragment(&mut fragment);
+
+        builder.fill(
+            Fill::NonZero,
+            Affine::IDENTITY,
+            self.background_color,
+            None,
+            &Rect::new(
+                pos.x,
+                pos.y,
+                pos.x + self.actual_size.width,
+                pos.y + self.actual_size.height,
+            ),
+        );
+
+        cx.builder.append(&fragment, Some(Affine::IDENTITY));
+
+        let left_pos = Point {
+            x: pos.x + self.left_pos.x,
+            y: pos.y + self.left_pos.y,
+        };
+
+        self.left.draw(&left_pos, cx);
+
+        let right_pos = Point {
+            x: pos.x + self.right_pos.x,
+            y: pos.y + self.right_pos.y,
+        };
+
+        self.right.draw(&right_pos, cx);
     }
 }
 
