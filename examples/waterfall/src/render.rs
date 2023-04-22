@@ -112,6 +112,7 @@ impl Renderer {
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[
+		    // Starboard texture
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
                         visibility: wgpu::ShaderStages::FRAGMENT,
@@ -122,22 +123,25 @@ impl Renderer {
                         },
                         count: None,
                     },
+		    // Port texture
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2Array,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                        },
+                        count: None,
+                    },
+		    // Sampler
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
                         visibility: wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
                         count: None,
                     },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 2,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            multisampled: false,
-                        },
-                        count: None,
-                    },
+
                 ],
                 label: Some("Texture bind group layout"),
             });
@@ -166,7 +170,7 @@ impl Renderer {
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/shader.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/sonar_shader.wgsl").into()),
         });
 
         let render_pipeline_layout =
@@ -254,45 +258,26 @@ impl Renderer {
             .starboard_texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
-        let port_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &self.texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&port_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&self.sampler),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&self.vello_texture.view),
-                },
-            ],
-            label: Some("Port bind group"),
-        });
-
-        let starboard_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        let texture_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &self.texture_bind_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
                     resource: wgpu::BindingResource::TextureView(&starboard_view),
                 },
-                wgpu::BindGroupEntry {
+		wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&self.sampler),
+                    resource: wgpu::BindingResource::TextureView(&port_view),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&self.vello_texture.view),
+                    resource: wgpu::BindingResource::Sampler(&self.sampler),
                 },
             ],
-            label: Some("Starboard bind group"),
+            label: Some("Sonar texture bind group"),
         });
 
-        // Update the viewport
+        // Update the viewport from the app
 
         let a = (app.idx as f32) / 256.0;
         queue.write_buffer(&self.viewport_buffer, 0, bytemuck::cast_slice(&[0.0f32, a]));
@@ -338,15 +323,10 @@ impl Renderer {
             });
             render_pass.set_pipeline(&self.render_pipeline);
 
-            // Draw and texture the starboard quad
-            render_pass.set_bind_group(0, &starboard_bind_group, &[]);
+            // Draw and texture the starboard and port quads
+            render_pass.set_bind_group(0, &texture_bind_group, &[]);
             render_pass.set_bind_group(1, &viewport_bind_group, &[]);
-            render_pass.draw(0..6, 0..1);
-
-            // Draw and texture the port quad and the vello texture
-            render_pass.set_bind_group(0, &port_bind_group, &[]);
-            render_pass.set_bind_group(1, &viewport_bind_group, &[]);
-            render_pass.draw(0..6, 1..3);
+            render_pass.draw(0..6, 0..2);
         }
 
         queue.submit(std::iter::once(encoder.finish()));
