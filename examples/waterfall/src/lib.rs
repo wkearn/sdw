@@ -135,17 +135,22 @@ pub fn run(
             ping_plot.draw(&view::Point::new(0.0, 3.0 * heightf64 / 4.0), &mut cx);
 
             let test_box = view::Box::new(Color::RED, view::Size::new(100.0, 100.0));
-            let mut container = view::Container::new(
+            let container = view::Container::new(
                 test_box,
                 Color::GREEN,
                 view::Size::new(10.0, 10.0),
                 view::Size::new(200.0, 200.0),
             );
 
+	    let test_box2 = view::Box::new(Color::BLUE,view::Size::new(200.0,50.0));
+
+	    let mut vstack = view::VerticalStack::new(container,test_box2,Color::CORAL);
+	    
+
             let screen_size = view::Size::new(widthf64, heightf64);
             let zero_size = view::Size::new(0.0, 0.0);
-            container.layout(&zero_size, &screen_size);
-            container.draw(&view::Point::new(widthf64 / 2.0, heightf64 / 2.0), &mut cx);
+            vstack.layout(&zero_size, &screen_size);
+            vstack.draw(&view::Point::new(widthf64 / 2.0, heightf64 / 2.0), &mut cx);
 
             // Render the vello scene to a texture
             let render_params = vello::RenderParams {
