@@ -53,8 +53,9 @@ pub struct Box {
 }
 
 impl Box {
-    pub fn new(foreground_color: Color, size: Size) -> Self {
+    pub fn new(title: String, foreground_color: Color, size: Size) -> Self {
         Self {
+	    title,
             foreground_color,
             nominal_size: size.clone(),
             actual_size: size.clone(),
@@ -124,12 +125,12 @@ impl<V: View> View for Container<V> {
         let (max_width, max_height) = (max_size.width, max_size.height);
 
         let child_min_size = Size {
-            width: min_width - 2.0 * self.padding.width,
-            height: min_height - 2.0 * self.padding.height,
+            width: (min_width - 2.0 * self.padding.width).max(0.0),
+            height: (min_height - 2.0 * self.padding.height).max(0.0),
         };
         let child_max_size = Size {
-            width: max_width - 2.0 * self.padding.width,
-            height: max_height - 2.0 * self.padding.height,
+            width: (max_width - 2.0 * self.padding.width).max(0.0),
+            height: (max_height - 2.0 * self.padding.height).max(0.0),
         };
 
         let child_size = self.child.layout(&child_min_size, &child_max_size);
@@ -220,11 +221,11 @@ where
 
         let bottom_min_size = Size {
             width: min_width,
-            height: min_height - top_size.height,
+            height: (min_height - top_size.height).max(0.0),
         };
         let bottom_max_size = Size {
             width: max_width,
-            height: max_height - top_size.height,
+            height: (max_height - top_size.height).max(0.0),
         };
 
         let bottom_size = self.bottom.layout(&bottom_min_size, &bottom_max_size);
@@ -318,11 +319,11 @@ where
         let left_size = self.left.layout(min_size, max_size);
 
         let right_min_size = Size {
-            width: min_width - left_size.width,
+            width: (min_width - left_size.width).max(0.0),
             height: min_height,
         };
         let right_max_size = Size {
-            width: max_width - left_size.width,
+            width: (max_width - left_size.width).max(0.0),
             height: max_height,
         };
 
