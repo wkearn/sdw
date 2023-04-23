@@ -48,16 +48,18 @@ impl Viewport {
 }
 
 pub struct Renderer {
-    render_pipeline: wgpu::RenderPipeline,
+    sonar_render_pipeline: wgpu::RenderPipeline,
     texture_dimensions: (u32, u32),
     texture_layers: u32,
     texture_bind_group_layout: wgpu::BindGroupLayout,
-    sampler: wgpu::Sampler,
-    vello_texture: TargetTexture,
+    sampler: wgpu::Sampler,    
     port_texture: wgpu::Texture,
     starboard_texture: wgpu::Texture,
     viewport_buffer: wgpu::Buffer,
     viewport_bind_group_layout: wgpu::BindGroupLayout,
+    vello_render_pipeline: wgpu::RenderPipeline,
+    vello_bind_group_layout: wgpu::BindGroupLayout,
+    vello_texture: TargetTexture,
 }
 
 impl Renderer {
@@ -180,7 +182,7 @@ impl Renderer {
                 push_constant_ranges: &[],
             });
 
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let sonar_render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Render pipeline"),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
@@ -215,17 +217,80 @@ impl Renderer {
             multiview: None,
         });
 
+	// Set up the vello render pipeline
+	let vello_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+	    label: Some("Vello blit shader"),
+	    source: wgpu::ShaderSource::Wgsl(include_str!("shaders/vello_shader.wgsl").into()),
+	});
+
+	let vello_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+	    label: None,
+	    entries: &[wgpu::BindGroupLayoutEntry {
+		visibility: wgpu::ShaderStages::FRAGMENT,
+		binding: 0,
+		ty: wgpu::BindingType::Texture {
+		    sample_type: wgpu::TextureSampleType::Float {filterable: true},
+		    view_dimension: wgpu::TextureViewDimension::D2,
+		    multisampled: false
+		},
+		count: None,
+	    }],
+	});
+
+	let vello_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor{
+	    label: None,
+	    bind_group_layouts: &[&vello_bind_group_layout],
+	    push_constant_ranges: &[],
+	});
+
+	let vello_render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+	    label: None,
+	    layout: Some(&vello_pipeline_layout),
+	    vertex: wgpu::VertexState {
+		module: &vello_shader,
+		entry_point: "vs_main",
+		buffers: &[],
+	    },
+	    fragment: Some(wgpu::FragmentState{
+		module: &vello_shader,
+		entry_point: "fs_main",
+		targets: &[Some(wgpu::ColorTargetState {
+		    format: *surface_format,
+		    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+		    write_mask: wgpu::ColorWrites::ALL,
+		})],
+	    }),
+	    primitive: wgpu::PrimitiveState {
+		topology: wgpu::PrimitiveTopology::TriangleList,
+		strip_index_format: None,
+		front_face: wgpu::FrontFace::Ccw,
+		cull_mode: Some(wgpu::Face::Back),
+		polygon_mode: wgpu::PolygonMode::Fill,
+		unclipped_depth: false,
+		conservative: false,
+	    },
+	    depth_stencil: None,
+	    multisample: wgpu::MultisampleState {
+		count: 1,
+		mask: !0,
+		alpha_to_coverage_enabled: false,
+	    },
+	    multiview: None,
+	});
+
         Self {
-            render_pipeline,
+            sonar_render_pipeline,
             texture_dimensions: dimensions,
             texture_layers: layers,
             texture_bind_group_layout,
             sampler,
-            vello_texture,
             port_texture,
             starboard_texture,
             viewport_buffer,
             viewport_bind_group_layout,
+	    vello_render_pipeline,
+	    vello_bind_group_layout,
+	    vello_texture,
         }
     }
 
@@ -291,6 +356,15 @@ impl Renderer {
             }],
         });
 
+	let vello_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+	    label: None,
+	    layout: &self.vello_bind_group_layout,
+	    entries: &[wgpu::BindGroupEntry {
+		binding: 0,
+		resource: wgpu::BindingResource::TextureView(self.vello_texture_view()),
+	    }],
+	});
+
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render encoder"),
         });
@@ -321,12 +395,16 @@ impl Renderer {
                 })],
                 depth_stencil_attachment: None,
             });
-            render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_pipeline(&self.sonar_render_pipeline);
 
             // Draw and texture the starboard and port quads
             render_pass.set_bind_group(0, &texture_bind_group, &[]);
             render_pass.set_bind_group(1, &viewport_bind_group, &[]);
             render_pass.draw(0..6, 0..2);
+
+	    render_pass.set_pipeline(&self.vello_render_pipeline);
+	    render_pass.set_bind_group(0,&vello_bind_group, &[]);
+	    render_pass.draw(0..6,0..1);
         }
 
         queue.submit(std::iter::once(encoder.finish()));
