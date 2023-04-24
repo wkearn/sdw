@@ -401,7 +401,7 @@ impl<'a> PingPlot<'a> {
         port_data: &'a [f32],
         background_color: Color,
         foreground_color: Color,
-	size: Size,
+        size: Size,
     ) -> Self {
         PingPlot {
             starboard_data,
@@ -409,16 +409,15 @@ impl<'a> PingPlot<'a> {
             foreground_color,
             background_color,
             nominal_size: size,
-	    actual_size: size
+            actual_size: size,
         }
     }
 }
 
 impl<'a> View for PingPlot<'a> {
-
     fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
-	// This is the same as the box layout
-	let (nominal_width, nominal_height) = (self.nominal_size.width, self.nominal_size.height);
+        // This is the same as the box layout
+        let (nominal_width, nominal_height) = (self.nominal_size.width, self.nominal_size.height);
 
         let width = nominal_width.min(max_size.width).max(min_size.width);
         let height = nominal_height.min(max_size.height).max(min_size.height);
@@ -428,7 +427,7 @@ impl<'a> View for PingPlot<'a> {
 
         size
     }
-    
+
     fn draw(&self, pos: &Point, cx: &mut RenderContext) {
         let mut fragment = SceneFragment::new();
         let mut builder = SceneBuilder::for_fragment(&mut fragment);
@@ -436,7 +435,7 @@ impl<'a> View for PingPlot<'a> {
         let size = &self.actual_size;
 
         let starboard_transform = Affine::map_unit_square(Rect::new(
-	    pos.x + size.width / 2.0,
+            pos.x + size.width / 2.0,
             pos.y + size.height,
             pos.x + size.width,
             pos.y,
@@ -536,15 +535,18 @@ impl ScrollBar {
         location: f64,
         background_color: Color,
         foreground_color: Color,
-	width: f64,
+        width: f64,
         row_max: usize,
     ) -> Self {
         Self {
             location,
             background_color,
             foreground_color,
-	    width,
-            actual_size: Size {width: 0.0, height: 0.0},
+            width,
+            actual_size: Size {
+                width: 0.0,
+                height: 0.0,
+            },
             row_max,
         }
     }
@@ -552,17 +554,16 @@ impl ScrollBar {
 
 impl View for ScrollBar {
     fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
+        let height = max_size.height;
+        let width = self.width.max(min_size.width).min(max_size.width);
 
-	let height = max_size.height;
-	let width = self.width.max(min_size.width).min(max_size.width);	
-	
-	let size = Size {width,height};
+        let size = Size { width, height };
 
-	self.actual_size = size; // What is the right ownership pattern here?
+        self.actual_size = size; // What is the right ownership pattern here?
 
-	size
+        size
     }
-    
+
     fn draw(&self, pos: &Point, cx: &mut RenderContext) {
         let mut fragment = SceneFragment::new();
         let mut builder = SceneBuilder::for_fragment(&mut fragment);
@@ -593,7 +594,7 @@ impl View for ScrollBar {
                 slider_pos.y,
                 slider_pos.x + size.width,
                 slider_pos.y - slider_height,
-		self.width / 2.0
+                self.width / 2.0,
             ),
         );
 
