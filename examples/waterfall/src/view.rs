@@ -543,14 +543,7 @@ impl View for ScrollBar {
 
         let origin = &self.origin;
         let size = &self.size;
-
-        let transform = Affine::map_unit_square(Rect::new(
-            origin.x,
-            origin.y + size.height,
-            origin.x + size.width,
-            origin.y,
-        ));
-
+        
         builder.fill(
             Fill::NonZero,
             Affine::IDENTITY,
