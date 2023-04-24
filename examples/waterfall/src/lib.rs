@@ -41,9 +41,6 @@ pub fn run(
     let mut cached_window = None;
 
     let mut scene = Scene::new();
-    let mut fragment = SceneFragment::new();
-
-    let transform = Affine::IDENTITY;
 
     let mut app = App::new(port_data, starboard_data, padded_len, row_max);
 
