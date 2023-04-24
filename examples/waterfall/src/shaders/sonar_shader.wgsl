@@ -10,6 +10,12 @@ struct Viewport {
 
 @group(1) @binding(0)
 var<uniform> viewport: Viewport;
+@group(1) @binding(1)
+var<uniform> starboard_offset: vec4<f32>;
+@group(1) @binding(2)
+var<uniform> port_offset: vec4<f32>;
+@group(1) @binding(3)
+var<uniform> scale_transform: mat2x2<f32>;
 
 @vertex
 fn vs_main(@builtin(vertex_index) idx: u32,
@@ -22,11 +28,11 @@ fn vs_main(@builtin(vertex_index) idx: u32,
   var tex_coords = vec2(0.0,4.0 + a);
   switch idx {
       case 1u: {
-	vertex = vec2(0.0, -1.0);
+	vertex = vec2(0.0, 0.0);
 	tex_coords = vec2(0.0,0.0 + a);
       }
       case 2u, 4u: {
-	vertex = vec2(1.0, -1.0);
+	vertex = vec2(1.0, 0.0);
 	tex_coords = vec2(1.0,0.0 + a);
       }
       case 5u: {
@@ -39,12 +45,12 @@ fn vs_main(@builtin(vertex_index) idx: u32,
   if instance == 0u {
       // Starboard instance
       out.tex_coords = tex_coords;
-      out.clip_position = vec4<f32>(vec2(1.0,0.75) * vertex + vec2(0.0,0.25),0.0,1.0);
+      out.clip_position = vec4<f32>(scale_transform*vertex + starboard_offset.xy,0.0,1.0);
       out.instance = 0u;
     } else {
     // Port instance
     out.tex_coords = vec2<f32>(1.0 - tex_coords.x,tex_coords.y);
-    out.clip_position = vec4<f32>(vec2(1.0,0.75) * vertex + vec2<f32>(-1.0,0.25),0.0,1.0);
+    out.clip_position = vec4<f32>(scale_transform*vertex + port_offset.xy,0.0,1.0);
     out.instance = 1u;
     }
 

@@ -56,7 +56,10 @@ pub struct Renderer {
     port_texture: wgpu::Texture,
     starboard_texture: wgpu::Texture,
     viewport_buffer: wgpu::Buffer,
-    viewport_bind_group_layout: wgpu::BindGroupLayout,
+    starboard_offset_buffer: wgpu::Buffer,
+    port_offset_buffer: wgpu::Buffer,
+    scale_transform_buffer: wgpu::Buffer,
+    uniform_bind_group_layout: wgpu::BindGroupLayout,
     vello_render_pipeline: wgpu::RenderPipeline,
     vello_bind_group_layout: wgpu::BindGroupLayout,
     vello_texture: TargetTexture,
@@ -154,19 +157,70 @@ impl Renderer {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
-        let viewport_bind_group_layout =
+	let starboard_offset_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+	    label: Some("Starboard offset buffer"),
+	    contents: bytemuck::cast_slice(&[0.0f32,-0.5f32,0.0f32,0.0f32]),
+	    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
+	});
+
+	let port_offset_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+	    label: Some("Port offset buffer"),
+	    contents: bytemuck::cast_slice(&[-1.0f32,-0.5f32,0.0f32,0.0f32]),
+	    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
+	});
+
+	
+	let scale_transform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+	    label: Some("Scale transform buffer"),
+	    contents: bytemuck::cast_slice(&[[1.0f32,0.0f32],[0.0f32,1.5f32]]),
+	    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
+	});
+
+        let uniform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("Viewport bind group layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+                label: Some("Uniform bind group layout"),
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
                     },
-                    count: None,
-                }],
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+		    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+		    wgpu::BindGroupLayoutEntry {
+                        binding: 3,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                ],
             });
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -177,7 +231,7 @@ impl Renderer {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render pipeline layout"),
-                bind_group_layouts: &[&texture_bind_group_layout, &viewport_bind_group_layout],
+                bind_group_layouts: &[&texture_bind_group_layout, &uniform_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -290,7 +344,10 @@ impl Renderer {
             port_texture,
             starboard_texture,
             viewport_buffer,
-            viewport_bind_group_layout,
+	    starboard_offset_buffer,
+	    port_offset_buffer,
+	    scale_transform_buffer,
+            uniform_bind_group_layout,
             vello_render_pipeline,
             vello_bind_group_layout,
             vello_texture,
@@ -350,13 +407,32 @@ impl Renderer {
         let a = (app.idx as f32) / 256.0;
         queue.write_buffer(&self.viewport_buffer, 0, bytemuck::cast_slice(&[0.0f32, a]));
 
-        let viewport_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Viewport bind group"),
-            layout: &self.viewport_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: self.viewport_buffer.as_entire_binding(),
-            }],
+	// TODO: Compute these from the scale and offset of the waterfall widget
+	queue.write_buffer(&self.starboard_offset_buffer, 0, bytemuck::cast_slice(&[0.0f32,-0.5f32,0.0f32,0.0f32]));
+	queue.write_buffer(&self.port_offset_buffer, 0, bytemuck::cast_slice(&[-1.0f32,-0.5f32,0.0f32,0.0f32]));	
+	queue.write_buffer(&self.scale_transform_buffer, 0, bytemuck::cast_slice(&[[1.0f32,0.0f32],[0.0f32,1.5f32]]));
+
+        let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Uniform bind group"),
+            layout: &self.uniform_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: self.viewport_buffer.as_entire_binding(),
+                },
+		wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: self.starboard_offset_buffer.as_entire_binding(),
+                },
+		wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: self.port_offset_buffer.as_entire_binding(),
+                },
+		wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: self.scale_transform_buffer.as_entire_binding(),
+                },
+            ],
         });
 
         let vello_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -402,7 +478,7 @@ impl Renderer {
 
             // Draw and texture the starboard and port quads
             render_pass.set_bind_group(0, &texture_bind_group, &[]);
-            render_pass.set_bind_group(1, &viewport_bind_group, &[]);
+            render_pass.set_bind_group(1, &uniform_bind_group, &[]);
             render_pass.draw(0..6, 0..2);
 
             render_pass.set_pipeline(&self.vello_render_pipeline);
