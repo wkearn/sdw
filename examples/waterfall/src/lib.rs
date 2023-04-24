@@ -13,10 +13,9 @@ use winit::{
 };
 
 use vello::{
-    kurbo::Affine,
-    peniko::{Color, Fill, Stroke},
+    peniko::{Color},
     util::{RenderContext, RenderSurface},
-    Renderer, RendererOptions, Scene, SceneBuilder, SceneFragment,
+    Renderer, RendererOptions, Scene, SceneBuilder,
 };
 
 struct RenderState {
@@ -131,7 +130,6 @@ pub fn run(
             );
 
             let test_box = view::Box::new(
-                "Box 1".to_string(),
                 Color::RED,
                 view::Size::new(100.0, 100.0),
             );

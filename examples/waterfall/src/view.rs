@@ -1,5 +1,5 @@
 use vello::{
-    kurbo::{Affine, BezPath, Circle, PathEl, Rect, RoundedRect},
+    kurbo::{Affine, BezPath, PathEl, Rect, RoundedRect},
     peniko::{Color, Fill, Stroke},
     SceneBuilder, SceneFragment,
 };
@@ -39,23 +39,19 @@ impl Size {
 }
 
 pub trait View {
-    fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
-        max_size.to_owned()
-    }
+    fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size;
     fn draw(&self, pos: &Point, cx: &mut RenderContext);
 }
 
 pub struct Box {
-    title: String,
     foreground_color: Color,
     nominal_size: Size,
     actual_size: Size,
 }
 
 impl Box {
-    pub fn new(title: String, foreground_color: Color, size: Size) -> Self {
+    pub fn new(foreground_color: Color, size: Size) -> Self {
         Self {
-            title,
             foreground_color,
             nominal_size: size.clone(),
             actual_size: size.clone(),
@@ -515,7 +511,10 @@ impl<'a> View for PingPlot<'a> {
 struct WaterfallPlot {}
 
 impl View for WaterfallPlot {
-    fn draw(&self, pos: &Point, cx: &mut RenderContext) {
+    fn layout(&mut self, _min_size: &Size, _max_size: &Size) -> Size {
+	Size {width: 200.0, height: 100.0}
+    }
+    fn draw(&self, _pos: &Point, _cx: &mut RenderContext) {
         // This is different from the ping plot because we need
         // to run the sonar rendering pipeline
     }
