@@ -103,19 +103,21 @@ pub fn run(
             let builder = SceneBuilder::for_scene(&mut scene);
             let mut cx = view::RenderContext::new(builder);
 
+            let screen_size = view::Size::new(widthf64, heightf64);
+            let zero_size = view::Size::new(0.0, 0.0);
+
             // Plot idx indicator
             let idx_plot = app.plot_idx();
 
-            let scroll_bar = view::ScrollBar::new(
-                idx_plot,
-                Color::rgb8(0, 0, 0),
-                Color::rgb8(200, 200, 200),
-                view::Point::new(widthf64 - 20.0, 0.0),
-                view::Size::new(20.0, 3.0 * heightf64 / 4.0),
-                row_max,
-            );
-
-            scroll_bar.draw(&view::Point::new(widthf64 - 20.0, 0.0), &mut cx);
+            /*
+                let scroll_bar = view::ScrollBar::new(
+                    idx_plot,
+                    Color::rgb8(0, 0, 0),
+                    Color::rgb8(200, 200, 200),
+                    20.0,
+                    row_max,
+                );
+            */
 
             // Plot pings
             let (starboard_ping_data, port_ping_data) = app.plot_pings();
@@ -125,43 +127,28 @@ pub fn run(
                 port_ping_data,
                 Color::rgb8(255, 255, 255),
                 Color::rgb8(0, 0, 0),
-                view::Point::new(0.0, 3.0 * heightf64 / 4.0),
                 view::Size::new(widthf64, heightf64 / 4.0),
             );
-
-            ping_plot.draw(&view::Point::new(0.0, 3.0 * heightf64 / 4.0), &mut cx);
 
             let test_box = view::Box::new(
                 "Box 1".to_string(),
                 Color::RED,
                 view::Size::new(100.0, 100.0),
             );
-            let container = view::Container::new(
+
+            let scroll_wrapper = view::ScrollWrapper::new(
                 test_box,
-                Color::GREEN,
-                view::Size::new(10.0, 10.0),
-                view::Size::new(200.0, 200.0),
+                idx_plot,
+                1024.0 / (row_max as f64),
+                20.0,
+                Color::rgb8(0, 0, 0),
+                Color::rgb8(200, 200, 200),
             );
 
-            let test_box2 = view::Box::new(
-                "Box 2".to_string(),
-                Color::BLUE,
-                view::Size::new(50.0, 100.0),
-            );
+            let mut view_stack = view::VerticalStack::new(scroll_wrapper, ping_plot, Color::GREEN);
 
-            let vstack = view::VerticalStack::new(container, test_box2, Color::CORAL);
-
-            let test_box3 = view::Box::new(
-                "Box 3".to_string(),
-                Color::ORANGE,
-                view::Size::new(75.0, 135.0),
-            );
-            let mut hstack = view::HorizontalStack::new(vstack, test_box3, Color::AQUAMARINE);
-
-            let screen_size = view::Size::new(widthf64, heightf64);
-            let zero_size = view::Size::new(0.0, 0.0);
-            hstack.layout(&zero_size, &screen_size);
-            hstack.draw(&view::Point::new(widthf64 / 2.0, heightf64 / 2.0), &mut cx);
+            view_stack.layout(&zero_size, &screen_size);
+            view_stack.draw(&view::Point::new(0.0, 0.0), &mut cx);
 
             // Render the vello scene to a texture
             let render_params = vello::RenderParams {
