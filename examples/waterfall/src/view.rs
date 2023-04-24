@@ -1,5 +1,5 @@
 use vello::{
-    kurbo::{Affine, BezPath, Circle, PathEl, Rect},
+    kurbo::{Affine, BezPath, Circle, PathEl, Rect, RoundedRect},
     peniko::{Color, Fill, Stroke},
     SceneBuilder, SceneFragment,
 };
@@ -55,7 +55,7 @@ pub struct Box {
 impl Box {
     pub fn new(title: String, foreground_color: Color, size: Size) -> Self {
         Self {
-	    title,
+            title,
             foreground_color,
             nominal_size: size.clone(),
             actual_size: size.clone(),
@@ -294,16 +294,19 @@ where
     actual_size: Size,
 }
 
-impl<L: View,R: View> HorizontalStack<L,R> {
+impl<L: View, R: View> HorizontalStack<L, R> {
     pub fn new(left: L, right: R, background_color: Color) -> Self {
-	Self {
-	    left,
-	    left_pos: Point {x: 0.0, y: 0.0},
-	    right,
-	    right_pos: Point {x: 0.0, y: 0.0},
-	    background_color,
-	    actual_size: Size { width: 0.0, height: 0.0}
-	}
+        Self {
+            left,
+            left_pos: Point { x: 0.0, y: 0.0 },
+            right,
+            right_pos: Point { x: 0.0, y: 0.0 },
+            background_color,
+            actual_size: Size {
+                width: 0.0,
+                height: 0.0,
+            },
+        }
     }
 }
 
@@ -345,7 +348,7 @@ where
             y: size.height / 2.0 - right_size.height / 2.0,
         };
 
-	size.to_owned()
+        size.to_owned()
     }
 
     fn draw(&self, pos: &Point, cx: &mut RenderContext) {
@@ -388,8 +391,8 @@ pub struct PingPlot<'a> {
     port_data: &'a [f32],
     background_color: Color,
     foreground_color: Color,
-    origin: Point,
-    size: Size,
+    nominal_size: Size,
+    actual_size: Size,
 }
 
 impl<'a> PingPlot<'a> {
@@ -398,40 +401,52 @@ impl<'a> PingPlot<'a> {
         port_data: &'a [f32],
         background_color: Color,
         foreground_color: Color,
-        origin: Point,
-        size: Size,
+	size: Size,
     ) -> Self {
         PingPlot {
             starboard_data,
             port_data,
             foreground_color,
             background_color,
-            origin,
-            size,
+            nominal_size: size,
+	    actual_size: size
         }
     }
 }
 
 impl<'a> View for PingPlot<'a> {
+
+    fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
+	// This is the same as the box layout
+	let (nominal_width, nominal_height) = (self.nominal_size.width, self.nominal_size.height);
+
+        let width = nominal_width.min(max_size.width).max(min_size.width);
+        let height = nominal_height.min(max_size.height).max(min_size.height);
+        let size = Size { width, height };
+
+        self.actual_size = size;
+
+        size
+    }
+    
     fn draw(&self, pos: &Point, cx: &mut RenderContext) {
         let mut fragment = SceneFragment::new();
         let mut builder = SceneBuilder::for_fragment(&mut fragment);
 
-        let origin = &self.origin;
-        let size = &self.size;
+        let size = &self.actual_size;
 
         let starboard_transform = Affine::map_unit_square(Rect::new(
-            origin.x + size.width / 2.0,
-            origin.y + size.height,
-            origin.x + size.width,
-            origin.y,
+	    pos.x + size.width / 2.0,
+            pos.y + size.height,
+            pos.x + size.width,
+            pos.y,
         ));
 
         let port_transform = Affine::map_unit_square(Rect::new(
-            origin.x + size.width / 2.0,
-            origin.y + size.height,
-            origin.x,
-            origin.y,
+            pos.x + size.width / 2.0,
+            pos.y + size.height,
+            pos.x,
+            pos.y,
         ));
 
         builder.fill(
@@ -511,9 +526,9 @@ pub struct ScrollBar {
     location: f64,
     background_color: Color,
     foreground_color: Color,
-    origin: Point,
-    size: Size,
     row_max: usize,
+    width: f64,
+    actual_size: Size,
 }
 
 impl ScrollBar {
@@ -521,43 +536,51 @@ impl ScrollBar {
         location: f64,
         background_color: Color,
         foreground_color: Color,
-        origin: Point,
-        size: Size,
+	width: f64,
         row_max: usize,
     ) -> Self {
         Self {
             location,
             background_color,
             foreground_color,
-            origin,
-            size,
+	    width,
+            actual_size: Size {width: 0.0, height: 0.0},
             row_max,
         }
     }
 }
 
 impl View for ScrollBar {
+    fn layout(&mut self, min_size: &Size, max_size: &Size) -> Size {
+
+	let height = max_size.height;
+	let width = self.width.max(min_size.width).min(max_size.width);	
+	
+	let size = Size {width,height};
+
+	self.actual_size = size; // What is the right ownership pattern here?
+
+	size
+    }
+    
     fn draw(&self, pos: &Point, cx: &mut RenderContext) {
         let mut fragment = SceneFragment::new();
         let mut builder = SceneBuilder::for_fragment(&mut fragment);
 
-        let origin = &self.origin;
-        let size = &self.size;
-        
+        let size = &self.actual_size;
+
         builder.fill(
             Fill::NonZero,
             Affine::IDENTITY,
             self.background_color,
             None,
-            &Rect::new(
-                origin.x,
-                origin.y,
-                origin.x + size.width,
-                origin.y + size.height,
-            ),
+            &Rect::new(pos.x, pos.y, pos.x + size.width, pos.y + size.height),
         );
 
-        let pos = (origin.x, origin.y + size.height * (1.0 - self.location));
+        let slider_pos = Point {
+            x: pos.x,
+            y: pos.y + size.height * (1.0 - self.location),
+        };
         let slider_height = 1024.0 * (size.height / (self.row_max as f64));
 
         builder.fill(
@@ -565,7 +588,13 @@ impl View for ScrollBar {
             Affine::IDENTITY,
             self.foreground_color,
             None,
-            &Rect::new(pos.0, pos.1, pos.0 + size.width, pos.1 - slider_height),
+            &RoundedRect::new(
+                slider_pos.x,
+                slider_pos.y,
+                slider_pos.x + size.width,
+                slider_pos.y - slider_height,
+		self.width / 2.0
+            ),
         );
 
         // Append our fragment to the scene
