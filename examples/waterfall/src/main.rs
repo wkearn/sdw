@@ -15,6 +15,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct Args {
+    /// The path to a JSF file to display
     path: std::path::PathBuf,
 }
 
