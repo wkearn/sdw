@@ -90,87 +90,29 @@ pub fn run(
             let width = render_state.surface.config.width;
             let height = render_state.surface.config.height;
             let device_handle = &render_cx.devices[render_state.surface.dev_id];
-
-            let widthf64 = f64::from(width);
-            let heightf64 = f64::from(height);
-
-            // Should we update this every frame?
-            app.update(&device_handle.queue);
-
-            // Build the vello Scene that we want to display over the sonar data
-
-            let builder = SceneBuilder::for_scene(&mut scene);
-            let mut cx = views::RenderContext::new(builder, &device_handle.queue);
-
-            let screen_size = views::Size::new(widthf64, heightf64);
-            let zero_size = views::Size::new(0.0, 0.0);
-
-            /*
-            // Plot idx indicator
-                let idx_plot = app.plot_idx();
-                    let scroll_bar = views::ScrollBar::new(
-                        idx_plot,
-                        Color::rgb8(0, 0, 0),
-                        Color::rgb8(200, 200, 200),
-                        20.0,
-                        row_max,
-                    );
-                */
-
-            /*
-               // Plot pings
-               let (starboard_ping_data, port_ping_data) = app.plot_pings();
-
-               let ping_plot = views::PingPlot::new(
-                   starboard_ping_data,
-                   port_ping_data,
-                   Color::rgb8(255, 255, 255),
-                   Color::rgb8(0, 0, 0),
-                   views::Size::new(widthf64, heightf64 / 4.0),
-               );
-
-
-               let waterfall = views::waterfall::WaterfallPlot::new(
-                   (app.idx as f32) / 256.0,
-                   &renderer.viewport_buffer,
-                   &renderer.starboard_offset_buffer,
-                   &renderer.port_offset_buffer,
-                   &renderer.scale_transform_buffer,
-                   &screen_size,
-                   &views::Size::new(widthf64, 3.0 * heightf64 / 4.0),
-               );
-
-               let scroll_wrapper = views::scroll::ScrollOverlay::new(
-                   waterfall,
-                   idx_plot,
-                   1024.0 / (row_max as f64),
-                   10.0,
-                   Color::rgba8(0, 0, 0, 63),
-                   Color::rgba8(200, 200, 200, 127),
-               );
-
-               let mut view_stack = views::Container::new(
-                   views::VerticalStack::new(scroll_wrapper, ping_plot, Color::TRANSPARENT),
-                   Color::TRANSPARENT,
-                   views::Size::new(5.0, 5.0),
-                   views::Size::new(widthf64, heightf64),
-               );
-
-            */
-
-            let surface_texture = render_state
+	    let surface_texture = render_state
                 .surface
                 .surface
                 .get_current_texture()
                 .expect("failed to get surface texture");
+	    
+            let widthf64 = f64::from(width);
+            let heightf64 = f64::from(height);
+
+            // Should we update this every frame?
+            app.update(&device_handle.queue);            
 
             if let Some(sonar_renderer) = &mut sonar_renderer {
                 {
+		    // Build the vello Scene that we want to display over the sonar data
+		    let builder = SceneBuilder::for_scene(&mut scene);
+		    let mut cx = views::RenderContext::new(builder, &device_handle.queue);
+		    
                     // Do this in its own block, because we only need to construct the view
                     // (and borrow the renderer) long enough to call draw.
                     // This won't work if we need to retain the view to dispatch events
                     let mut view = app.to_view(sonar_renderer, widthf64, heightf64);
-                    view.layout(&zero_size, &screen_size);
+                    view.layout(&views::Size::new(0.0,0.0), &views::Size::new(widthf64,heightf64));
                     view.draw(&views::Point::new(0.0, 0.0), &mut cx);
                 }
 
