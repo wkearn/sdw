@@ -4,7 +4,7 @@ use vello::{
     SceneBuilder, SceneFragment,
 };
 
-use super::{Size,Point,View,RenderContext};
+use super::{Point, RenderContext, Size, View};
 
 pub struct ScrollWrapper<V: View> {
     child: V,

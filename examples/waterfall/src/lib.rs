@@ -139,26 +139,23 @@ pub fn run(
                 &screen_size,
                 &views::Size::new(widthf64, 3.0 * heightf64 / 4.0),
             );
-	    
+
             let scroll_wrapper = views::scroll::ScrollOverlay::new(
                 waterfall,
                 idx_plot,
                 1024.0 / (row_max as f64),
                 10.0,
                 Color::rgba8(0, 0, 0, 127),
-                Color::rgba8(200, 200, 200,127),
-            );            
+                Color::rgba8(200, 200, 200, 127),
+            );
 
+            let mut view_stack = views::Container::new(
+                views::VerticalStack::new(scroll_wrapper, ping_plot, Color::TRANSPARENT),
+                Color::TRANSPARENT,
+                views::Size::new(5.0, 5.0),
+                views::Size::new(widthf64, heightf64),
+            );
 
-	    let mut view_stack =
-                views::Container::new(
-		    views::VerticalStack::new(scroll_wrapper, ping_plot, Color::TRANSPARENT),
-		    Color::TRANSPARENT,
-		    views::Size::new(5.0,5.0),
-		    views::Size::new(widthf64,heightf64),			
-		);
-		
-	    
             view_stack.layout(&zero_size, &screen_size);
             view_stack.draw(&views::Point::new(0.0, 0.0), &mut cx);
 
