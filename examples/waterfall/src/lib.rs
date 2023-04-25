@@ -130,30 +130,30 @@ pub fn run(
             );
 
             let Some(renderer) = &sonar_renderer else {unreachable!()};
-            let test_box = view::WaterfallPlot::new(
+            let waterfall = view::WaterfallPlot::new(
                 (app.idx as f32) / 256.0,
                 &renderer.viewport_buffer,
                 &renderer.starboard_offset_buffer,
                 &renderer.port_offset_buffer,
                 &renderer.scale_transform_buffer,
                 &screen_size,
-                &view::Size::new(500.0, 500.0),
+                &view::Size::new(widthf64, 3.0 * heightf64 / 4.0),
             );
 
-            let scroll_wrapper = view::ScrollWrapper::new(
-                test_box,
+	    let view_stack =
+                view::VerticalStack::new(waterfall, ping_plot, Color::TRANSPARENT);
+	    
+            let mut scroll_wrapper = view::ScrollWrapper::new(
+                view_stack,
                 idx_plot,
                 1024.0 / (row_max as f64),
                 20.0,
                 Color::rgb8(0, 0, 0),
                 Color::rgb8(200, 200, 200),
-            );
+            );            
 
-            let mut view_stack =
-                view::VerticalStack::new(scroll_wrapper, ping_plot, Color::rgba8(0, 255, 0, 127));
-
-            view_stack.layout(&zero_size, &screen_size);
-            view_stack.draw(&view::Point::new(0.0, 0.0), &mut cx);
+            scroll_wrapper.layout(&zero_size, &screen_size);
+            scroll_wrapper.draw(&view::Point::new(0.0, 0.0), &mut cx);
 
             // Render the vello scene to a texture
             let render_params = vello::RenderParams {
