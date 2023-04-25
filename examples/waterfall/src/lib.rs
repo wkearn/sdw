@@ -130,7 +130,7 @@ pub fn run(
             );
 
             let Some(renderer) = &sonar_renderer else {unreachable!()};
-            let waterfall = views::WaterfallPlot::new(
+            let waterfall = views::waterfall::WaterfallPlot::new(
                 (app.idx as f32) / 256.0,
                 &renderer.viewport_buffer,
                 &renderer.starboard_offset_buffer,
@@ -145,7 +145,7 @@ pub fn run(
                 idx_plot,
                 1024.0 / (row_max as f64),
                 10.0,
-                Color::rgba8(0, 0, 0, 127),
+                Color::rgba8(0, 0, 0, 63),
                 Color::rgba8(200, 200, 200, 127),
             );
 
