@@ -100,16 +100,16 @@ pub fn run(
             // Build the vello Scene that we want to display over the sonar data
 
             let builder = SceneBuilder::for_scene(&mut scene);
-            let mut cx = view::RenderContext::new(builder, &device_handle.queue);
+            let mut cx = views::RenderContext::new(builder, &device_handle.queue);
 
-            let screen_size = view::Size::new(widthf64, heightf64);
-            let zero_size = view::Size::new(0.0, 0.0);
+            let screen_size = views::Size::new(widthf64, heightf64);
+            let zero_size = views::Size::new(0.0, 0.0);
 
             // Plot idx indicator
             let idx_plot = app.plot_idx();
 
             /*
-                let scroll_bar = view::ScrollBar::new(
+                let scroll_bar = views::ScrollBar::new(
                     idx_plot,
                     Color::rgb8(0, 0, 0),
                     Color::rgb8(200, 200, 200),
@@ -121,29 +121,29 @@ pub fn run(
             // Plot pings
             let (starboard_ping_data, port_ping_data) = app.plot_pings();
 
-            let ping_plot = view::PingPlot::new(
+            let ping_plot = views::PingPlot::new(
                 starboard_ping_data,
                 port_ping_data,
                 Color::rgb8(255, 255, 255),
                 Color::rgb8(0, 0, 0),
-                view::Size::new(widthf64, heightf64 / 4.0),
+                views::Size::new(widthf64, heightf64 / 4.0),
             );
 
             let Some(renderer) = &sonar_renderer else {unreachable!()};
-            let waterfall = view::WaterfallPlot::new(
+            let waterfall = views::WaterfallPlot::new(
                 (app.idx as f32) / 256.0,
                 &renderer.viewport_buffer,
                 &renderer.starboard_offset_buffer,
                 &renderer.port_offset_buffer,
                 &renderer.scale_transform_buffer,
                 &screen_size,
-                &view::Size::new(widthf64, 3.0 * heightf64 / 4.0),
+                &views::Size::new(widthf64, 3.0 * heightf64 / 4.0),
             );
 
 	    let view_stack =
-                view::VerticalStack::new(waterfall, ping_plot, Color::TRANSPARENT);
+                views::VerticalStack::new(waterfall, ping_plot, Color::TRANSPARENT);
 	    
-            let mut scroll_wrapper = view::ScrollWrapper::new(
+            let mut scroll_wrapper = views::ScrollWrapper::new(
                 view_stack,
                 idx_plot,
                 1024.0 / (row_max as f64),
@@ -153,7 +153,7 @@ pub fn run(
             );            
 
             scroll_wrapper.layout(&zero_size, &screen_size);
-            scroll_wrapper.draw(&view::Point::new(0.0, 0.0), &mut cx);
+            scroll_wrapper.draw(&views::Point::new(0.0, 0.0), &mut cx);
 
             // Render the vello scene to a texture
             let render_params = vello::RenderParams {
