@@ -143,7 +143,7 @@ pub fn run(
 	    let view_stack =
                 views::VerticalStack::new(waterfall, ping_plot, Color::TRANSPARENT);
 	    
-            let mut scroll_wrapper = views::ScrollWrapper::new(
+            let mut scroll_wrapper = views::scroll::ScrollWrapper::new(
                 view_stack,
                 idx_plot,
                 1024.0 / (row_max as f64),
