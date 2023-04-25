@@ -1,10 +1,10 @@
 pub mod app;
 pub mod render;
 pub mod sonar_data;
-pub mod view;
+pub mod views;
 
 use app::App;
-use view::View;
+use views::View;
 
 use winit::{
     event::*,
