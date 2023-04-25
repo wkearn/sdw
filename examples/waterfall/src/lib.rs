@@ -13,7 +13,7 @@ use winit::{
 };
 
 use vello::{
-    peniko::{Color},
+    peniko::Color,
     util::{RenderContext, RenderSurface},
     Renderer, RendererOptions, Scene, SceneBuilder,
 };
@@ -100,7 +100,7 @@ pub fn run(
             // Build the vello Scene that we want to display over the sonar data
 
             let builder = SceneBuilder::for_scene(&mut scene);
-            let mut cx = view::RenderContext::new(builder);
+            let mut cx = view::RenderContext::new(builder, &device_handle.queue);
 
             let screen_size = view::Size::new(widthf64, heightf64);
             let zero_size = view::Size::new(0.0, 0.0);
@@ -129,9 +129,15 @@ pub fn run(
                 view::Size::new(widthf64, heightf64 / 4.0),
             );
 
-            let test_box = view::Box::new(
-                Color::RED,
-                view::Size::new(100.0, 100.0),
+            let Some(renderer) = &sonar_renderer else {unreachable!()};
+            let test_box = view::WaterfallPlot::new(
+                (app.idx as f32) / 256.0,
+                &renderer.viewport_buffer,
+                &renderer.starboard_offset_buffer,
+                &renderer.port_offset_buffer,
+                &renderer.scale_transform_buffer,
+                &screen_size,
+                &view::Size::new(500.0, 500.0),
             );
 
             let scroll_wrapper = view::ScrollWrapper::new(
@@ -143,7 +149,8 @@ pub fn run(
                 Color::rgb8(200, 200, 200),
             );
 
-            let mut view_stack = view::VerticalStack::new(scroll_wrapper, ping_plot, Color::GREEN);
+            let mut view_stack =
+                view::VerticalStack::new(scroll_wrapper, ping_plot, Color::rgba8(0, 255, 0, 127));
 
             view_stack.layout(&zero_size, &screen_size);
             view_stack.draw(&view::Point::new(0.0, 0.0), &mut cx);
