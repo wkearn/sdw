@@ -105,66 +105,58 @@ pub fn run(
             let screen_size = views::Size::new(widthf64, heightf64);
             let zero_size = views::Size::new(0.0, 0.0);
 
+            /*
             // Plot idx indicator
-            let idx_plot = app.plot_idx();
+                let idx_plot = app.plot_idx();
+                    let scroll_bar = views::ScrollBar::new(
+                        idx_plot,
+                        Color::rgb8(0, 0, 0),
+                        Color::rgb8(200, 200, 200),
+                        20.0,
+                        row_max,
+                    );
+                */
 
             /*
-                let scroll_bar = views::ScrollBar::new(
-                    idx_plot,
-                    Color::rgb8(0, 0, 0),
-                    Color::rgb8(200, 200, 200),
-                    20.0,
-                    row_max,
-                );
+               // Plot pings
+               let (starboard_ping_data, port_ping_data) = app.plot_pings();
+
+               let ping_plot = views::PingPlot::new(
+                   starboard_ping_data,
+                   port_ping_data,
+                   Color::rgb8(255, 255, 255),
+                   Color::rgb8(0, 0, 0),
+                   views::Size::new(widthf64, heightf64 / 4.0),
+               );
+
+
+               let waterfall = views::waterfall::WaterfallPlot::new(
+                   (app.idx as f32) / 256.0,
+                   &renderer.viewport_buffer,
+                   &renderer.starboard_offset_buffer,
+                   &renderer.port_offset_buffer,
+                   &renderer.scale_transform_buffer,
+                   &screen_size,
+                   &views::Size::new(widthf64, 3.0 * heightf64 / 4.0),
+               );
+
+               let scroll_wrapper = views::scroll::ScrollOverlay::new(
+                   waterfall,
+                   idx_plot,
+                   1024.0 / (row_max as f64),
+                   10.0,
+                   Color::rgba8(0, 0, 0, 63),
+                   Color::rgba8(200, 200, 200, 127),
+               );
+
+               let mut view_stack = views::Container::new(
+                   views::VerticalStack::new(scroll_wrapper, ping_plot, Color::TRANSPARENT),
+                   Color::TRANSPARENT,
+                   views::Size::new(5.0, 5.0),
+                   views::Size::new(widthf64, heightf64),
+               );
+
             */
-
-            // Plot pings
-            let (starboard_ping_data, port_ping_data) = app.plot_pings();
-
-            let ping_plot = views::PingPlot::new(
-                starboard_ping_data,
-                port_ping_data,
-                Color::rgb8(255, 255, 255),
-                Color::rgb8(0, 0, 0),
-                views::Size::new(widthf64, heightf64 / 4.0),
-            );
-
-            let renderer = sonar_renderer.as_ref().expect("Renderer not initialized");
-            let waterfall = views::waterfall::WaterfallPlot::new(
-                (app.idx as f32) / 256.0,
-                &renderer.viewport_buffer,
-                &renderer.starboard_offset_buffer,
-                &renderer.port_offset_buffer,
-                &renderer.scale_transform_buffer,
-                &screen_size,
-                &views::Size::new(widthf64, 3.0 * heightf64 / 4.0),
-            );
-
-            let scroll_wrapper = views::scroll::ScrollOverlay::new(
-                waterfall,
-                idx_plot,
-                1024.0 / (row_max as f64),
-                10.0,
-                Color::rgba8(0, 0, 0, 63),
-                Color::rgba8(200, 200, 200, 127),
-            );
-
-            let mut view_stack = views::Container::new(
-                views::VerticalStack::new(scroll_wrapper, ping_plot, Color::TRANSPARENT),
-                Color::TRANSPARENT,
-                views::Size::new(5.0, 5.0),
-                views::Size::new(widthf64, heightf64),
-            );
-
-            view_stack.layout(&zero_size, &screen_size);
-            view_stack.draw(&views::Point::new(0.0, 0.0), &mut cx);
-
-            // Render the vello scene to a texture
-            let render_params = vello::RenderParams {
-                base_color: Color::TRANSPARENT,
-                width,
-                height,
-            };
 
             let surface_texture = render_state
                 .surface
@@ -173,6 +165,22 @@ pub fn run(
                 .expect("failed to get surface texture");
 
             if let Some(sonar_renderer) = &mut sonar_renderer {
+                {
+                    // Do this in its own block, because we only need to construct the view
+                    // (and borrow the renderer) long enough to call draw.
+                    // This won't work if we need to retain the view to dispatch events
+                    let mut view = app.to_view(sonar_renderer, widthf64, heightf64);
+                    view.layout(&zero_size, &screen_size);
+                    view.draw(&views::Point::new(0.0, 0.0), &mut cx);
+                }
+
+                // Render the vello scene to a texture
+                let render_params = vello::RenderParams {
+                    base_color: Color::TRANSPARENT,
+                    width,
+                    height,
+                };
+
                 // Resize as necessary.
                 sonar_renderer.resize_vello_texture(&device_handle.device, width, height);
 

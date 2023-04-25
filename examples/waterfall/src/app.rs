@@ -1,6 +1,10 @@
 use winit::event::*;
 
+use crate::render::Renderer;
 use crate::sonar_data::SonarDataBuffer;
+use crate::views::{self, View};
+
+use vello::peniko::Color;
 
 pub struct App {
     pub idx: usize,
@@ -63,15 +67,14 @@ impl App {
                 self.delta = -32;
                 true
             }
-	    WindowEvent::MouseWheel { delta,..} => {
-		self.delta = match &delta {
-		    winit::event::MouseScrollDelta::LineDelta(_,dy) => 32 * (dy.round() as i32),
-		    _ => 0
-		};
-		true
-	    }
+            WindowEvent::MouseWheel { delta, .. } => {
+                self.delta = match &delta {
+                    winit::event::MouseScrollDelta::LineDelta(_, dy) => 32 * (dy.round() as i32),
+                    _ => 0,
+                };
+                true
+            }
             _ => false,
-
         }
     }
 
@@ -120,5 +123,49 @@ impl App {
 
     pub fn plot_idx(&self) -> f64 {
         (self.idx as f64) / (self.row_max as f64)
+    }
+
+    pub fn to_view<'a>(
+        &'a self,
+        renderer: &'a Renderer,
+        width: f64,
+        height: f64,
+    ) -> impl View + 'a {
+        let idx_plot = self.plot_idx();
+        let (starboard_ping_data, port_ping_data) = self.plot_pings();
+
+        let ping_plot = views::PingPlot::new(
+            starboard_ping_data,
+            port_ping_data,
+            Color::rgb8(255, 255, 255),
+            Color::rgb8(0, 0, 0),
+            views::Size::new(width, height / 4.0),
+        );
+
+        let waterfall = views::waterfall::WaterfallPlot::new(
+            (self.idx as f32) / 256.0,
+            &renderer.viewport_buffer,
+            &renderer.starboard_offset_buffer,
+            &renderer.port_offset_buffer,
+            &renderer.scale_transform_buffer,
+            &views::Size::new(width, height),
+            &views::Size::new(width, 3.0 * height / 4.0),
+        );
+
+        let scroll_wrapper = views::scroll::ScrollOverlay::new(
+            waterfall,
+            idx_plot,
+            1024.0 / (self.row_max as f64),
+            10.0,
+            Color::rgba8(0, 0, 0, 63),
+            Color::rgba8(200, 200, 200, 127),
+        );
+
+        views::Container::new(
+            views::VerticalStack::new(scroll_wrapper, ping_plot, Color::TRANSPARENT),
+            Color::TRANSPARENT,
+            views::Size::new(5.0, 5.0),
+            views::Size::new(width, height),
+        )
     }
 }

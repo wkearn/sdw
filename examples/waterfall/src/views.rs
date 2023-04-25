@@ -509,5 +509,5 @@ impl<'a> View for PingPlot<'a> {
     }
 }
 
-pub mod waterfall;
 pub mod scroll;
+pub mod waterfall;
