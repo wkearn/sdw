@@ -48,7 +48,7 @@ impl App {
                     },
                 ..
             } => {
-                self.delta = 10;
+                self.delta = 32;
                 true
             }
             WindowEvent::KeyboardInput {
@@ -60,10 +60,18 @@ impl App {
                     },
                 ..
             } => {
-                self.delta = -10;
+                self.delta = -32;
                 true
             }
+	    WindowEvent::MouseWheel { delta,..} => {
+		self.delta = match &delta {
+		    winit::event::MouseScrollDelta::LineDelta(_,dy) => 32 * (dy.round() as i32),
+		    _ => 0
+		};
+		true
+	    }
             _ => false,
+
         }
     }
 
