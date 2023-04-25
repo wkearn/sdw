@@ -129,7 +129,7 @@ pub fn run(
                 views::Size::new(widthf64, heightf64 / 4.0),
             );
 
-            let Some(renderer) = &sonar_renderer else {unreachable!()};
+            let renderer = sonar_renderer.as_ref().expect("Renderer not initialized");
             let waterfall = views::waterfall::WaterfallPlot::new(
                 (app.idx as f32) / 256.0,
                 &renderer.viewport_buffer,
