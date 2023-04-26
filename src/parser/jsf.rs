@@ -33,10 +33,6 @@ impl Message {
             _ => Channel::Other,
         }
     }
-
-    pub fn data(&self) -> &MessageType {
-        &self.data
-    }
 }
 
 /// An unknown message type
@@ -408,7 +404,7 @@ impl PitchRollData {
 #[br(import {message_type:u16,
 	     message_size:i32})]
 #[derive(Debug, PartialEq)]
-pub enum MessageType {
+enum MessageType {
     #[br(pre_assert(message_type==80))]
     M80 {
         #[br(args {message_size})]
