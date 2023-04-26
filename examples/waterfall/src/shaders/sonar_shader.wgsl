@@ -98,6 +98,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   let s_starboard = textureSample(starboard_texture,s,vec2(in.tex_coords.x,fract(in.tex_coords.y)),visible_tile);
   let s_port = textureSample(port_texture,s,vec2(in.tex_coords.x,fract(in.tex_coords.y)),visible_tile);
   let s = select(s_port,s_starboard,in.instance==0u);
-  let v = sqrt(clamp(s.x / 10000.0, 0.0,1.0)); // Note sqrt transformation. Helps with visibility
+  let v = sqrt(clamp(s.x / viewport.viewport.x, 0.0,1.0)); // Note sqrt transformation. Helps with visibility
   return vec4<f32>(lab_to_srgb(vec3<f32>(100.0*v,18.0*v,77.0*v)),1.0);
 }

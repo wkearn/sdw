@@ -13,6 +13,7 @@ pub struct App {
     pub starboard_data_buffer: SonarDataBuffer,
     col_max: usize,
     row_max: usize,
+    data_max: f32,
 }
 
 impl App {
@@ -23,6 +24,10 @@ impl App {
         row_max: usize,
     ) -> Self {
         let dimensions = (padded_len as u32, 2048);
+
+	let data_max = port_data.iter().fold(0.0f32,|acc,&x| acc.max(x));
+	let data_max = starboard_data.iter().fold(data_max,|acc,&x| acc.max(x));
+	
         let port_data_buffer = SonarDataBuffer::new(port_data, dimensions);
         let starboard_data_buffer = SonarDataBuffer::new(starboard_data, dimensions);
 
@@ -33,6 +38,7 @@ impl App {
             starboard_data_buffer,
             col_max: padded_len,
             row_max,
+	    data_max
         }
     }
 
@@ -143,6 +149,7 @@ impl App {
         );
 
         let waterfall = views::waterfall::WaterfallPlot::new(
+	    self.data_max,
             (self.idx as f32) / 256.0,
             &renderer.viewport_buffer,
             &renderer.starboard_offset_buffer,

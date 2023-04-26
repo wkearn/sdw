@@ -1,6 +1,7 @@
 use super::{Point, RenderContext, Size, View};
 
 pub struct WaterfallPlot<'a> {
+    data_max: f32,
     viewport_location: f32,
     viewport_buffer: &'a wgpu::Buffer,
     starboard_offset_buffer: &'a wgpu::Buffer,
@@ -13,6 +14,7 @@ pub struct WaterfallPlot<'a> {
 
 impl<'a> WaterfallPlot<'a> {
     pub fn new(
+	data_max: f32,
         viewport_location: f32,
         viewport_buffer: &'a wgpu::Buffer,
         starboard_offset_buffer: &'a wgpu::Buffer,
@@ -22,6 +24,7 @@ impl<'a> WaterfallPlot<'a> {
         nominal_size: &Size,
     ) -> Self {
         Self {
+	    data_max,
             viewport_location,
             viewport_buffer,
             starboard_offset_buffer,
@@ -70,7 +73,7 @@ impl<'a> View for WaterfallPlot<'a> {
         cx.queue.write_buffer(
             self.viewport_buffer,
             0,
-            bytemuck::cast_slice(&[0.0f32, self.viewport_location]),
+            bytemuck::cast_slice(&[self.data_max, self.viewport_location]),
         );
 
         cx.queue.write_buffer(
