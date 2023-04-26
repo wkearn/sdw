@@ -33,6 +33,10 @@ impl Message {
             _ => Channel::Other,
         }
     }
+
+    pub fn data(&self) -> &MessageType {
+        &self.data
+    }
 }
 
 /// An unknown message type
@@ -177,6 +181,16 @@ impl SonarData {
     /// Return the mixer frequency in hertz
     pub fn mixer_frequency(&self) -> f64 {
         f64::from(self.mixer_frequency)
+    }
+
+    /// Return the sweep start frequency in hertz
+    pub fn start_frequency(&self) -> u32 {
+        10 * (u32::from(self.start_frequency) + (u32::from(self.msbs & 0x0f) << 16))
+    }
+
+    /// Return the sweep end frequency in hertz
+    pub fn end_frequency(&self) -> u32 {
+        10 * (u32::from(self.end_frequency) + (u32::from(self.msbs & 0xf0) << 16))
     }
 
     /// Return the sampling interval in seconds
@@ -394,7 +408,7 @@ impl PitchRollData {
 #[br(import {message_type:u16,
 	     message_size:i32})]
 #[derive(Debug, PartialEq)]
-enum MessageType {
+pub enum MessageType {
     #[br(pre_assert(message_type==80))]
     M80 {
         #[br(args {message_size})]
@@ -498,7 +512,7 @@ impl From<Message> for SonarDataRecord<f32> {
             MessageType::M80 { msg: mt } => SonarDataRecord::Ping(crate::model::Ping::new(
                 "unknown".to_string(),
                 mt.timestamp(),
-                mt.mixer_frequency(),
+                mt.start_frequency(),
                 mt.sampling_interval(),
                 msg.channel(),
                 mt.trace(),

@@ -73,8 +73,8 @@ impl Shot {
         PrimitiveDateTime::parse(&s, &format).unwrap().assume_utc()
     }
 
-    fn frequency(&self) -> f64 {
-        1000.0 * f64::from(self.frequency)
+    fn frequency(&self) -> u32 {
+        1000 * u32::from(self.frequency)
     }
 
     fn sampling_interval(&self) -> f64 {

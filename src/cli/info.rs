@@ -30,7 +30,7 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
                 channel,
                 data,
                 sampling_interval,
-		frequency,		
+                frequency,
                 ..
             }) => {
                 match channel {
@@ -44,7 +44,7 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
                 } else if timestamp > end_date {
                     end_date = timestamp;
                 }
-		frequencies.push(frequency);
+                frequencies.push(frequency);
                 data_lengths.insert(data.len());
                 sampling_intervals.push(sampling_interval);
             }
@@ -113,10 +113,10 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
     }
 
     println!("Unique frequencies:");
-    frequencies.sort_by(|a, b| a.total_cmp(&b));
+    frequencies.sort_by(|a, b| a.cmp(&b));
     frequencies.dedup();
     for f in frequencies {
-        println!("\t{} kHz", f/1.0e3);
+        println!("\t{} kHz", f / 1000);
     }
 
     Ok(())

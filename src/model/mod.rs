@@ -32,7 +32,7 @@ pub struct Ping<T> {
     #[serde(with = "time::serde::timestamp")]
     pub timestamp: OffsetDateTime,
     /// The frequency of the sonar system
-    pub frequency: f64,
+    pub frequency: u32,
     /// The sampling interval of the data
     pub sampling_interval: f64,
     /// The channel (Port, Starboard, Other)
@@ -46,7 +46,7 @@ impl<T> Ping<T> {
     pub fn new(
         source: String,
         timestamp: OffsetDateTime,
-        frequency: f64,
+        frequency: u32,
         sampling_interval: f64,
         channel: Channel,
         data: Vec<T>,
