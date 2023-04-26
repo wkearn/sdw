@@ -6,7 +6,7 @@ use sdw::{
 use waterfall::run;
 
 use itertools::Itertools;
-use std::collections::{BTreeSet,BTreeMap};
+use std::collections::{BTreeMap, BTreeSet};
 
 use vello::util::RenderContext;
 
@@ -28,35 +28,49 @@ impl Args {
 
         let jsf = jsf::File::open(args.path)?;
 
-	// How can we make sure that port_data corresponds to starboard_data?
-	// What happens if we have multiple subsystems?
+        // How can we make sure that port_data corresponds to starboard_data?
+        // What happens if we have multiple subsystems?
 
-	// This vector stores every ping
-	let data: Vec<Ping<f32>> = jsf.filter_map(|msg| match SonarDataRecord::from(msg.unwrap()) {
-	    SonarDataRecord::Ping(ping) => Some(ping),
-	    _ => None,
-	}).collect();
+        // This vector stores every ping
+        let data: Vec<Ping<f32>> = jsf
+            .filter_map(|msg| match SonarDataRecord::from(msg.unwrap()) {
+                SonarDataRecord::Ping(ping) => Some(ping),
+                _ => None,
+            })
+            .collect();
 
-	// HashMap<Channel,Vec<Ping>>
-	let mut data = data.into_iter().into_group_map_by(|ping| ping.channel);
+        // HashMap<Channel,Vec<Ping>>
+        let mut data = data.into_iter().into_group_map_by(|ping| ping.channel);
 
-	let port_pings: Vec<Ping<f32>> = data.remove(&Channel::Port).unwrap();
-	let starboard_pings: Vec<Ping<f32>> = data.remove(&Channel::Starboard).unwrap();
+        let port_pings: Vec<Ping<f32>> = data.remove(&Channel::Port).unwrap();
+        let starboard_pings: Vec<Ping<f32>> = data.remove(&Channel::Starboard).unwrap();
 
-	let mut port_map: BTreeMap<_,_> = port_pings.into_iter().map(|ping| (ping.timestamp, ping)).collect();
-	let mut starboard_map: BTreeMap<_,_> = starboard_pings.into_iter().map(|ping| (ping.timestamp,ping)).collect();
+        let mut port_map: BTreeMap<_, _> = port_pings
+            .into_iter()
+            .map(|ping| (ping.timestamp, ping))
+            .collect();
+        let mut starboard_map: BTreeMap<_, _> = starboard_pings
+            .into_iter()
+            .map(|ping| (ping.timestamp, ping))
+            .collect();
 
-	let port_ts: BTreeSet<_> = port_map.keys().cloned().collect(); // Port timestamps
-	let starboard_ts: BTreeSet<_> = starboard_map.keys().cloned().collect(); // Starboard timestamps
+        let port_ts: BTreeSet<_> = port_map.keys().cloned().collect(); // Port timestamps
+        let starboard_ts: BTreeSet<_> = starboard_map.keys().cloned().collect(); // Starboard timestamps
 
-	let ts: Vec<_> = port_ts.intersection(&starboard_ts).collect();
+        let ts: Vec<_> = port_ts.intersection(&starboard_ts).collect();
 
-	let port_data: Vec<Vec<f32>> = ts.iter().map(|t| port_map.remove(t).unwrap().data).collect();
-	let starboard_data: Vec<Vec<f32>> = ts.iter().map(|t| starboard_map.remove(t).unwrap().data).collect();
+        let port_data: Vec<Vec<f32>> = ts
+            .iter()
+            .map(|t| port_map.remove(t).unwrap().data)
+            .collect();
+        let starboard_data: Vec<Vec<f32>> = ts
+            .iter()
+            .map(|t| starboard_map.remove(t).unwrap().data)
+            .collect();
 
-	let row_max = port_data.len();
-	
-	let data_len = port_data[0].len();
+        let row_max = port_data.len();
+
+        let data_len = port_data[0].len();
         let padding = vec![0.0f32; 256 - (data_len % 256)];
 
         let padded_len = std::cmp::min(8192, data_len + padding.len());
@@ -86,8 +100,7 @@ impl Args {
             padded_len,
             row_max,
         );
-	
-	Ok(())
+        Ok(())
     }
 }
 

@@ -90,29 +90,32 @@ pub fn run(
             let width = render_state.surface.config.width;
             let height = render_state.surface.config.height;
             let device_handle = &render_cx.devices[render_state.surface.dev_id];
-	    let surface_texture = render_state
+            let surface_texture = render_state
                 .surface
                 .surface
                 .get_current_texture()
                 .expect("failed to get surface texture");
-	    
+
             let widthf64 = f64::from(width);
             let heightf64 = f64::from(height);
 
             // Should we update this every frame?
-            app.update(&device_handle.queue);            
+            app.update(&device_handle.queue);
 
             if let Some(sonar_renderer) = &mut sonar_renderer {
                 {
-		    // Build the vello Scene that we want to display over the sonar data
-		    let builder = SceneBuilder::for_scene(&mut scene);
-		    let mut cx = views::RenderContext::new(builder, &device_handle.queue);
-		    
+                    // Build the vello Scene that we want to display over the sonar data
+                    let builder = SceneBuilder::for_scene(&mut scene);
+                    let mut cx = views::RenderContext::new(builder, &device_handle.queue);
+
                     // Do this in its own block, because we only need to construct the view
                     // (and borrow the renderer) long enough to call draw.
                     // This won't work if we need to retain the view to dispatch events
                     let mut view = app.to_view(sonar_renderer, widthf64, heightf64);
-                    view.layout(&views::Size::new(0.0,0.0), &views::Size::new(widthf64,heightf64));
+                    view.layout(
+                        &views::Size::new(0.0, 0.0),
+                        &views::Size::new(widthf64, heightf64),
+                    );
                     view.draw(&views::Point::new(0.0, 0.0), &mut cx);
                 }
 
