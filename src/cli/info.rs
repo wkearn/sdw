@@ -34,8 +34,8 @@ pub fn info<P: AsRef<std::path::Path>>(path: P) -> std::io::Result<()> {
                 ..
             }) => {
                 match channel {
-                    Channel::Port => port_channel_count += 1,
-                    Channel::Starboard => starboard_channel_count += 1,
+                    Channel::Port(_) => port_channel_count += 1,
+                    Channel::Starboard(_) => starboard_channel_count += 1,
                     Channel::Other => other_channel_count += 1,
                 }
 

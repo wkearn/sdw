@@ -31,12 +31,12 @@ pub fn range_filter(c: &mut Criterion) {
                     (
                         "Ping".to_string(),
                         OffsetDateTime::UNIX_EPOCH,
-                        Channel::Port,
+                        Channel::Port(0),
                     )
                         ..(
                             "Ping".to_string(),
                             OffsetDateTime::now_utc(),
-                            Channel::Starboard,
+                            Channel::Starboard(u32::MAX),
                         ),
                 )
                 .count();

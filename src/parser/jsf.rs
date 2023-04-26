@@ -28,8 +28,8 @@ pub struct Message {
 impl Message {
     fn channel(&self) -> Channel {
         match self.channel_number {
-            0 => Channel::Port,
-            1 => Channel::Starboard,
+            0 => Channel::Port(self.subsystem_number.into()),
+            1 => Channel::Starboard(self.subsystem_number.into()),
             _ => Channel::Other,
         }
     }

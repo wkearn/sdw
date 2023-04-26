@@ -42,8 +42,14 @@ impl Args {
         // HashMap<Channel,Vec<Ping>>
         let mut data = data.into_iter().into_group_map_by(|ping| ping.channel);
 
-        let port_pings: Vec<Ping<f32>> = data.remove(&Channel::Port).unwrap();
-        let starboard_pings: Vec<Ping<f32>> = data.remove(&Channel::Starboard).unwrap();
+	let &sn = data.keys().filter_map(|channel| match channel {
+	    Channel::Port(sn) => Some(sn),
+	    Channel::Starboard(sn) => Some(sn),
+	    Channel::Other => None
+	}).unique().next().unwrap();
+
+        let port_pings: Vec<Ping<f32>> = data.remove(&Channel::Port(sn)).unwrap();
+        let starboard_pings: Vec<Ping<f32>> = data.remove(&Channel::Starboard(sn)).unwrap();
 
         let mut port_map: BTreeMap<_, _> = port_pings
             .into_iter()

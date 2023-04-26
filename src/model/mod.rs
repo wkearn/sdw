@@ -11,10 +11,10 @@ use time::OffsetDateTime;
     Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize, Serialize, Default,
 )]
 pub enum Channel {
-    /// A ping to port
-    Port,
-    /// A ping to starboard
-    Starboard,
+    /// A ping to port, parameterized by a subsystem number
+    Port(u32),
+    /// A ping to starboard, parameterized by a subsystem number
+    Starboard(u32),
     /// Some other channel
     #[default]
     Other,
