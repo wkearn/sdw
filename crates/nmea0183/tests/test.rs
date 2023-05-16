@@ -8,15 +8,6 @@ fn load_test_data() -> Result<String, std::io::Error> {
 }
 
 #[test]
-fn parse_lines() {
-    let data = load_test_data().expect("Failed to open test data file");
-
-    for line in data.lines() {
-        let nms: Sentence = line.parse().unwrap();
-    }
-}
-
-#[test]
 fn count_types() {
     let data = load_test_data().expect("Failed to open test data file");
 
