@@ -14,33 +14,36 @@ fn count_types() {
     let mut dict = std::collections::HashMap::new();
 
     for line in data.lines() {
-        match line.parse().unwrap() {
-            Sentence::GLL => {
-                dict.entry("GLL")
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
+        if line.starts_with("##") {
+        } else {
+            match line.parse().unwrap() {
+                Sentence::GLL => {
+                    dict.entry("GLL")
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                }
+                Sentence::VTG => {
+                    dict.entry("VTG")
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                }
+                Sentence::RMC => {
+                    dict.entry("RMC")
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                }
+                Sentence::GGA => {
+                    dict.entry("RMC")
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                }
+                Sentence::ZDA => {
+                    dict.entry("RMC")
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                }
+                _ => {}
             }
-            Sentence::VTG => {
-                dict.entry("VTG")
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-            }
-            Sentence::RMC => {
-                dict.entry("RMC")
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-            }
-            Sentence::GGA => {
-                dict.entry("RMC")
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-            }
-            Sentence::ZDA => {
-                dict.entry("RMC")
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-            }
-	    _ => {}
         }
     }
 
