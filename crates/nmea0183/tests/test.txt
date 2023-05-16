@@ -1,5 +1,5 @@
 ## Papenmeier, Svenja; Hass, H Christian (2019): Sidescan sonar survey (300 kHz) during R/V Heincke cruise HE501 in the German Bight with link to raw data files. Alfred Wegener Institute - Wadden Sea Station Sylt, PANGAEA, https://doi.org/10.1594/PANGAEA.907463
-
+##
 $GPGGA,203550.00,5436.81532132,N,00709.04614388,E,2,09,0.9,7.903,M,45.318,M,15.8,0762*7A
 $GPVTG,264.42,T,,M,4.95,N,9.16,K,D*38
 $GPZDA,203550.008,15,11,2017,00,00*5F
